@@ -1,7 +1,23 @@
 import axios from 'axios';
 import type { LoginCredentials, AuthResponse, Job, JobApplication, DashboardStats, Resume } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+// Determine API base URL based on environment
+const getApiBaseUrl = () => {
+  // If VITE_API_BASE_URL is explicitly set, use it
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  
+  // In production, use the Railway backend URL
+  if (import.meta.env.PROD) {
+    return 'https://backend-nodejs-jobportal-production.up.railway.app/api';
+  }
+  
+  // In development, use localhost
+  return 'http://localhost:3000/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -259,7 +275,8 @@ export const applicationsAPI = {
 export const dashboardAPI = {
   getStats: async (): Promise<DashboardStats> => {
     try {
-      const response = await api.get<any>('/dashboard/stats');
+      // Backend supports both /dashboard and /stats endpoints
+      const response = await api.get<any>('/dashboard');
       console.log('Dashboard stats API response:', response.data);
       
       // Handle different response structures
