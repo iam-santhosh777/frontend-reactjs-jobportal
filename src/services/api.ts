@@ -7,59 +7,75 @@ const getApiBaseUrl = (): string => {
   const PRODUCTION_API_URL = 'https://backend-nodejs-jobportal-production.up.railway.app/api';
   const DEVELOPMENT_API_URL = 'http://localhost:3000/api';
   
-  // Priority 1: Runtime check FIRST - if deployed to Vercel or any remote server (not localhost)
-  // This MUST be checked first because it's the most reliable runtime indicator
-  // It works even if build-time environment variables are wrong
-  if (typeof window !== 'undefined') {
+  // CRITICAL: Runtime check MUST be first - this is the most reliable indicator
+  // We check the actual browser location at runtime, not build-time variables
+  if (typeof window !== 'undefined' && window.location) {
     const hostname = window.location.hostname.toLowerCase();
     const origin = window.location.origin.toLowerCase();
+    const href = window.location.href.toLowerCase();
     
-    // Explicitly check for Vercel domains
+    // Explicitly check for Vercel domains (most common deployment)
     const isVercel = hostname.includes('vercel.app') || 
                      hostname.includes('vercel.com') ||
                      origin.includes('vercel.app') ||
-                     origin.includes('vercel.com');
+                     origin.includes('vercel.com') ||
+                     href.includes('vercel.app') ||
+                     href.includes('vercel.com');
     
-    // Check if it's localhost or local network
-    const isLocalhost = hostname === 'localhost' || 
-                       hostname === '127.0.0.1' ||
-                       hostname.startsWith('192.168.') ||
-                       hostname.startsWith('10.') ||
-                       hostname.startsWith('172.') ||
-                       hostname.includes('.local');
+    // Check if it's explicitly localhost or local network IP
+    const isExplicitLocalhost = hostname === 'localhost' || 
+                                hostname === '127.0.0.1' ||
+                                hostname.startsWith('192.168.') ||
+                                hostname.startsWith('10.') ||
+                                hostname.startsWith('172.') ||
+                                hostname.includes('.local');
     
-    // If it's Vercel OR any non-localhost domain, use production URL
-    if (isVercel || !isLocalhost) {
-      console.log('🌐 Runtime detection: Deployed environment detected', {
+    // DEFAULT TO PRODUCTION: If it's Vercel OR any non-localhost domain, use production
+    // This is the safest default - only use localhost if we're EXPLICITLY on localhost
+    if (isVercel || !isExplicitLocalhost) {
+      const detectedUrl = PRODUCTION_API_URL;
+      console.log('🌐 RUNTIME DETECTION: Using PRODUCTION URL', {
         hostname,
         origin,
+        href,
         isVercel,
-        isLocalhost,
-        usingUrl: PRODUCTION_API_URL
+        isExplicitLocalhost,
+        detectedUrl,
+        reason: isVercel ? 'Vercel domain detected' : 'Non-localhost domain detected'
       });
-      return PRODUCTION_API_URL;
+      return detectedUrl;
+    }
+    
+    // Only use localhost if we're EXPLICITLY on localhost
+    if (isExplicitLocalhost) {
+      console.log('💻 RUNTIME DETECTION: Using LOCALHOST URL (explicit localhost detected)', {
+        hostname,
+        origin,
+        detectedUrl: DEVELOPMENT_API_URL
+      });
+      return DEVELOPMENT_API_URL;
     }
   }
   
-  // Priority 2: Explicitly set via environment variable
+  // Priority 2: Explicitly set via environment variable (if runtime check didn't work)
   if (import.meta.env.VITE_API_BASE_URL) {
-    const envUrl = import.meta.env.VITE_API_BASE_URL.trim();
-    if (envUrl) {
+    const envUrl = String(import.meta.env.VITE_API_BASE_URL).trim();
+    if (envUrl && !envUrl.includes('localhost')) {
       console.log('✅ Using VITE_API_BASE_URL from environment:', envUrl);
       return envUrl;
     }
   }
   
-  // Priority 3: Check if we're in production build (build-time check)
-  // This is a fallback in case runtime detection fails
+  // Priority 3: Check if we're in production build (build-time check as fallback)
   if (import.meta.env.PROD || import.meta.env.MODE === 'production') {
-    console.log('📦 Production build detected (build-time). Using Railway production URL:', PRODUCTION_API_URL);
+    console.log('📦 Production build detected (build-time fallback). Using Railway URL:', PRODUCTION_API_URL);
     return PRODUCTION_API_URL;
   }
   
-  // Priority 4: Development fallback (only for localhost)
-  console.log('💻 Development mode. Using localhost URL:', DEVELOPMENT_API_URL);
-  return DEVELOPMENT_API_URL;
+  // Priority 4: Last resort - default to production if we can't determine
+  // This is safer than defaulting to localhost
+  console.warn('⚠️ Could not determine environment. Defaulting to PRODUCTION URL for safety:', PRODUCTION_API_URL);
+  return PRODUCTION_API_URL;
 };
 
 // Create axios instance without baseURL initially - we'll set it dynamically
