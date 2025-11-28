@@ -12,22 +12,35 @@ const getApiBaseUrl = () => {
     return import.meta.env.VITE_API_BASE_URL;
   }
   
-  // In production (Vercel deployment), use Railway URL
-  if (import.meta.env.PROD || import.meta.env.MODE === 'production') {
+  // Check if we're in production (build-time check)
+  const isProductionBuild = import.meta.env.PROD || import.meta.env.MODE === 'production';
+  
+  // Runtime check: if deployed to Vercel or any remote server (not localhost)
+  const isDeployed = typeof window !== 'undefined' && 
+    window.location.hostname !== 'localhost' && 
+    window.location.hostname !== '127.0.0.1' &&
+    !window.location.hostname.startsWith('192.168.') &&
+    !window.location.hostname.startsWith('10.') &&
+    !window.location.hostname.startsWith('172.');
+  
+  // If production build OR deployed to a remote server, use Railway URL
+  if (isProductionBuild || isDeployed) {
     return 'https://backend-nodejs-jobportal-production.up.railway.app/api';
   }
   
-  // Development fallback
+  // Development fallback (only for localhost)
   return 'http://localhost:3000/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
 
-// Log API URL in development for debugging
-if (import.meta.env.DEV) {
+// Log API URL for debugging (always log in development, conditionally in production)
+if (import.meta.env.DEV || (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app'))) {
   console.log('🔗 API Base URL:', API_BASE_URL);
   console.log('🌍 Environment:', import.meta.env.MODE);
   console.log('📦 Production Mode:', import.meta.env.PROD);
+  console.log('🌐 Hostname:', typeof window !== 'undefined' ? window.location.hostname : 'N/A');
+  console.log('🔧 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL || 'Not set');
 }
 
 const api = axios.create({

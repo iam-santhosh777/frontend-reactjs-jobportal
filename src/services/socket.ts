@@ -11,19 +11,30 @@ const getSocketUrl = () => {
     return baseUrl;
   }
   
-  // In production, use Railway URL
-  if (import.meta.env.PROD || import.meta.env.MODE === 'production') {
+  // Check if we're in production (build-time check)
+  const isProductionBuild = import.meta.env.PROD || import.meta.env.MODE === 'production';
+  
+  // Runtime check: if deployed to Vercel or any remote server (not localhost)
+  const isDeployed = typeof window !== 'undefined' && 
+    window.location.hostname !== 'localhost' && 
+    window.location.hostname !== '127.0.0.1' &&
+    !window.location.hostname.startsWith('192.168.') &&
+    !window.location.hostname.startsWith('10.') &&
+    !window.location.hostname.startsWith('172.');
+  
+  // If production build OR deployed to a remote server, use Railway URL
+  if (isProductionBuild || isDeployed) {
     return 'https://backend-nodejs-jobportal-production.up.railway.app';
   }
   
-  // Development fallback
+  // Development fallback (only for localhost)
   return 'http://localhost:3000';
 };
 
 const SOCKET_URL = getSocketUrl();
 
-// Log Socket URL in development for debugging
-if (import.meta.env.DEV) {
+// Log Socket URL for debugging
+if (import.meta.env.DEV || (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app'))) {
   console.log('🔌 Socket URL:', SOCKET_URL);
 }
 
