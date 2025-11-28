@@ -3,40 +3,50 @@ import type { JobApplication, Job } from '../types';
 
 // Socket URL from environment variables
 // Derives from API URL (same host, different protocol)
-const getSocketUrl = () => {
+// This function is called at runtime to ensure correct URL detection
+const getSocketUrl = (): string => {
+  // Priority 1: Explicitly set via environment variable (highest priority)
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
   if (apiUrl) {
     // Extract base URL from API URL (remove /api suffix if present)
-    const baseUrl = apiUrl.replace(/\/api\/?$/, '');
-    return baseUrl;
+    const baseUrl = apiUrl.trim().replace(/\/api\/?$/, '');
+    if (baseUrl) {
+      console.log('✅ Using Socket URL from VITE_API_BASE_URL:', baseUrl);
+      return baseUrl;
+    }
   }
   
-  // Check if we're in production (build-time check)
-  const isProductionBuild = import.meta.env.PROD || import.meta.env.MODE === 'production';
-  
-  // Runtime check: if deployed to Vercel or any remote server (not localhost)
-  const isDeployed = typeof window !== 'undefined' && 
-    window.location.hostname !== 'localhost' && 
-    window.location.hostname !== '127.0.0.1' &&
-    !window.location.hostname.startsWith('192.168.') &&
-    !window.location.hostname.startsWith('10.') &&
-    !window.location.hostname.startsWith('172.');
-  
-  // If production build OR deployed to a remote server, use Railway URL
-  if (isProductionBuild || isDeployed) {
-    return 'https://backend-nodejs-jobportal-production.up.railway.app';
+  // Priority 2: Runtime check - if deployed to Vercel or any remote server (not localhost)
+  // This is the most reliable runtime indicator
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname.toLowerCase();
+    const isLocalhost = hostname === 'localhost' || 
+                       hostname === '127.0.0.1' ||
+                       hostname.startsWith('192.168.') ||
+                       hostname.startsWith('10.') ||
+                       hostname.startsWith('172.') ||
+                       hostname.includes('.local');
+    
+    // If NOT localhost, we're deployed - ALWAYS use Railway URL
+    if (!isLocalhost) {
+      const productionUrl = 'https://backend-nodejs-jobportal-production.up.railway.app';
+      console.log('🌐 Detected deployment environment. Using Railway Socket URL:', productionUrl);
+      return productionUrl;
+    }
   }
   
-  // Development fallback (only for localhost)
-  return 'http://localhost:3000';
+  // Priority 3: Check if we're in production build (build-time check)
+  if (import.meta.env.PROD || import.meta.env.MODE === 'production') {
+    const productionUrl = 'https://backend-nodejs-jobportal-production.up.railway.app';
+    console.log('📦 Production build detected. Using Railway Socket URL:', productionUrl);
+    return productionUrl;
+  }
+  
+  // Priority 4: Development fallback (only for localhost)
+  const devUrl = 'http://localhost:3000';
+  console.log('💻 Development mode. Using localhost Socket URL:', devUrl);
+  return devUrl;
 };
-
-const SOCKET_URL = getSocketUrl();
-
-// Log Socket URL for debugging
-if (import.meta.env.DEV || (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app'))) {
-  console.log('🔌 Socket URL:', SOCKET_URL);
-}
 
 class SocketService {
   private socket: Socket | null = null;
@@ -46,7 +56,12 @@ class SocketService {
       return this.socket;
     }
 
-    this.socket = io(SOCKET_URL, {
+    // Get socket URL dynamically at connection time to ensure it's correct
+    const socketUrl = getSocketUrl();
+    console.log('🔌 Connecting to Socket URL:', socketUrl);
+    console.log('🌐 Current hostname:', typeof window !== 'undefined' ? window.location.hostname : 'N/A');
+
+    this.socket = io(socketUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],
     });

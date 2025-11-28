@@ -4,7 +4,7 @@ import { DashboardWidget } from '../components/DashboardWidget';
 import { dashboardAPI } from '../services/api';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { Typography, Box, Button } from '@mui/material';
+import { Typography, Box, Button, Paper, Container } from '@mui/material';
 import { Add, Work, Assignment, Schedule, Description } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import type { DashboardStats } from '../types';
@@ -51,35 +51,49 @@ export const HRDashboard = () => {
 
   return (
     <Layout>
-      <Box sx={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+      <Container maxWidth="xl" sx={{ width: '100%', boxSizing: 'border-box' }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
+          {/* Header Section */}
           <Box sx={{ mb: 4 }}>
             <Typography
               variant="h4"
               component="h1"
-              sx={{ fontWeight: 700, mb: 1, fontSize: { xs: '1.75rem', sm: '2.125rem' } }}
+              sx={{ 
+                fontWeight: 700, 
+                mb: 1, 
+                fontSize: { xs: '1.75rem', sm: '2.125rem' },
+                color: 'text.primary',
+              }}
             >
               HR Dashboard
             </Typography>
-            <Typography variant="body1" color="text.secondary">
+            <Typography 
+              variant="body1" 
+              color="text.secondary"
+              sx={{ fontSize: '1rem' }}
+            >
               Overview of your job portal activities
             </Typography>
           </Box>
 
-          {/* Stats Widgets */}
+          {/* Stats Widgets Grid */}
           <Box 
             sx={{ 
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+              gridTemplateColumns: { 
+                xs: '1fr', 
+                sm: 'repeat(2, 1fr)', 
+                md: 'repeat(4, 1fr)' 
+              },
               gap: 3,
               mb: 4,
             }}
           >
-            <Box sx={{ display: 'flex', height: { xs: 'auto', md: '180px' } }}>
+            <Box sx={{ display: 'flex', minHeight: { xs: '160px', md: '180px' } }}>
               <DashboardWidget
                 title="Total Jobs Posted"
                 value={stats.totalJobs}
@@ -88,7 +102,7 @@ export const HRDashboard = () => {
                 index={0}
               />
             </Box>
-            <Box sx={{ display: 'flex', height: { xs: 'auto', md: '180px' } }}>
+            <Box sx={{ display: 'flex', minHeight: { xs: '160px', md: '180px' } }}>
               <DashboardWidget
                 title="Total Applications"
                 value={stats.totalApplications}
@@ -97,7 +111,7 @@ export const HRDashboard = () => {
                 index={1}
               />
             </Box>
-            <Box sx={{ display: 'flex', height: { xs: 'auto', md: '180px' } }}>
+            <Box sx={{ display: 'flex', minHeight: { xs: '160px', md: '180px' } }}>
               <DashboardWidget
                 title="Expired Jobs"
                 value={stats.expiredJobs}
@@ -106,7 +120,7 @@ export const HRDashboard = () => {
                 index={2}
               />
             </Box>
-            <Box sx={{ display: 'flex', height: { xs: 'auto', md: '180px' } }}>
+            <Box sx={{ display: 'flex', minHeight: { xs: '160px', md: '180px' } }}>
               <DashboardWidget
                 title="Resumes Uploaded"
                 value={stats.totalResumes}
@@ -117,76 +131,138 @@ export const HRDashboard = () => {
             </Box>
           </Box>
 
-          {/* Quick Actions */}
-          <Box
+          {/* Quick Actions Section */}
+          <Paper
+            elevation={2}
             sx={{
               bgcolor: 'white',
               borderRadius: 3,
-              p: 3,
+              p: { xs: 2.5, sm: 3, md: 4 },
               boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              mb: 4,
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontWeight: 600, 
+                mb: 3,
+                fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                color: 'text.primary',
+              }}
+            >
               Quick Actions
             </Typography>
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={() => navigate('/hr/post-job')}
-                sx={{
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 3,
-                }}
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                gap: 2, 
+                flexWrap: 'wrap',
+                justifyContent: { xs: 'center', sm: 'flex-start' },
+              }}
+            >
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                Post New Job
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<Work />}
-                onClick={() => navigate('/hr/jobs')}
-                sx={{
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 3,
-                }}
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={() => navigate('/hr/post-job')}
+                  size="large"
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    px: 4,
+                    py: 1.25,
+                    boxShadow: 2,
+                    '&:hover': {
+                      boxShadow: 4,
+                    },
+                  }}
+                >
+                  Post New Job
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                View All Jobs
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<Assignment />}
-                onClick={() => navigate('/hr/applications')}
-                sx={{
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 3,
-                }}
+                <Button
+                  variant="outlined"
+                  startIcon={<Work />}
+                  onClick={() => navigate('/hr/jobs')}
+                  size="large"
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    px: 4,
+                    py: 1.25,
+                    borderWidth: 2,
+                    '&:hover': {
+                      borderWidth: 2,
+                      bgcolor: 'action.hover',
+                    },
+                  }}
+                >
+                  View All Jobs
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                View Applications
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<Description />}
-                onClick={() => navigate('/hr/resumes')}
-                sx={{
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 3,
-                }}
+                <Button
+                  variant="outlined"
+                  startIcon={<Assignment />}
+                  onClick={() => navigate('/hr/applications')}
+                  size="large"
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    px: 4,
+                    py: 1.25,
+                    borderWidth: 2,
+                    '&:hover': {
+                      borderWidth: 2,
+                      bgcolor: 'action.hover',
+                    },
+                  }}
+                >
+                  View Applications
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                Upload Resumes
-              </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<Description />}
+                  onClick={() => navigate('/hr/resumes')}
+                  size="large"
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    px: 4,
+                    py: 1.25,
+                    borderWidth: 2,
+                    '&:hover': {
+                      borderWidth: 2,
+                      bgcolor: 'action.hover',
+                    },
+                  }}
+                >
+                  Upload Resumes
+                </Button>
+              </motion.div>
             </Box>
-          </Box>
+          </Paper>
         </motion.div>
-      </Box>
+      </Container>
     </Layout>
   );
 };
