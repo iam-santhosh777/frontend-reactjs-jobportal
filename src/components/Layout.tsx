@@ -24,7 +24,6 @@ import {
   Assignment,
   Description,
   Logout,
-  Menu as MenuIcon,
   Close,
 } from '@mui/icons-material';
 
@@ -40,7 +39,6 @@ export const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleDrawerToggle = () => {
@@ -59,16 +57,6 @@ export const Layout = ({ children }: LayoutProps) => {
     if (isMobile) {
       setMobileOpen(false);
     }
-  };
-
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   // Navigation items based on role
