@@ -10,11 +10,22 @@ const getSocketUrl = () => {
     const baseUrl = apiUrl.replace(/\/api\/?$/, '');
     return baseUrl;
   }
-  // Fallback to localhost
+  
+  // In production, use Railway URL
+  if (import.meta.env.PROD || import.meta.env.MODE === 'production') {
+    return 'https://backend-nodejs-jobportal-production.up.railway.app';
+  }
+  
+  // Development fallback
   return 'http://localhost:3000';
 };
 
 const SOCKET_URL = getSocketUrl();
+
+// Log Socket URL in development for debugging
+if (import.meta.env.DEV) {
+  console.log('🔌 Socket URL:', SOCKET_URL);
+}
 
 class SocketService {
   private socket: Socket | null = null;

@@ -56,15 +56,22 @@ npm run dev
 
 ### Production Environment
 
-1. Create a `.env.production` file in the root directory:
+1. **For local production builds**, create a `.env.production` file:
 ```env
 VITE_API_BASE_URL=https://backend-nodejs-jobportal-production.up.railway.app/api
 ```
 
-2. Build for production:
+2. **For Vercel deployment**, set the environment variable in Vercel Dashboard:
+   - Go to your project settings → Environment Variables
+   - Add: `VITE_API_BASE_URL` = `https://backend-nodejs-jobportal-production.up.railway.app/api`
+   - Apply to: Production, Preview, and Development environments
+
+3. Build for production:
 ```bash
 npm run build
 ```
+
+**Note:** The code automatically uses the Railway URL in production if `VITE_API_BASE_URL` is not set, but it's recommended to set it in Vercel for clarity.
 
 ### Environment Variables
 
