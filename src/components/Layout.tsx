@@ -6,8 +6,6 @@ import { motion } from 'framer-motion';
 import {
   Box,
   Drawer,
-  AppBar,
-  Toolbar,
   List,
   ListItem,
   ListItemButton,
@@ -26,7 +24,7 @@ import {
   Assignment,
   Description,
   Logout,
-  Menu,
+  Menu as MenuIcon,
   Close,
 } from '@mui/icons-material';
 
@@ -42,6 +40,7 @@ export const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleDrawerToggle = () => {
@@ -60,6 +59,16 @@ export const Layout = ({ children }: LayoutProps) => {
     if (isMobile) {
       setMobileOpen(false);
     }
+  };
+
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   // Navigation items based on role
@@ -110,17 +119,6 @@ export const Layout = ({ children }: LayoutProps) => {
         )}
       </Box>
 
-      {/* User Info */}
-      <Box sx={{ p: 2, bgcolor: 'grey.100' }}>
-        <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-          {user?.name}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          {user?.role.toUpperCase()}
-        </Typography>
-      </Box>
-
-      <Divider />
 
       {/* Navigation Items */}
       <List sx={{ flexGrow: 1, pt: 2 }}>
@@ -184,30 +182,6 @@ export const Layout = ({ children }: LayoutProps) => {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'grey.50', overflowX: 'hidden' }}>
-      {/* App Bar for Mobile */}
-      <AppBar
-        position="fixed"
-        sx={{
-          display: { xs: 'block', md: 'none' },
-          bgcolor: 'primary.main',
-          boxShadow: 2,
-        }}
-      >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2 }}
-          >
-            <Menu />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
-            HRMS + Job Portal
-          </Typography>
-        </Toolbar>
-      </AppBar>
 
       {/* Desktop Sidebar */}
       <Box
@@ -263,7 +237,6 @@ export const Layout = ({ children }: LayoutProps) => {
           maxWidth: { md: `calc(100vw - ${drawerWidth}px)` },
         }}
       >
-        <Toolbar sx={{ display: { xs: 'block', md: 'none' } }} />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

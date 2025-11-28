@@ -33,11 +33,18 @@ export interface JobApplication {
 }
 
 export interface Resume {
-  id: string;
-  fileName: string;
-  fileSize: number;
-  uploadedAt: string;
-  status: 'uploading' | 'success' | 'failed';
+  id: string | number;
+  filename: string;
+  fileName?: string; // Legacy support
+  fileSize?: number;
+  jobId?: number | string | null;
+  jobTitle?: string | null;
+  status: 'uploading' | 'success' | 'failed' | 'uploaded';
+  createdAt?: string;
+  uploadedAt?: string; // Legacy support
+  downloadUrl?: string;
+  viewUrl?: string;
+  cloudinaryUrl?: string;
 }
 
 export interface DashboardStats {

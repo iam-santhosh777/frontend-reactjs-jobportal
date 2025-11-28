@@ -1,10 +1,37 @@
 import axios from 'axios';
 import type { LoginCredentials, AuthResponse, Job, JobApplication, DashboardStats, Resume } from '../types';
 
-// API Base URL - Always use Railway production URL
-const API_BASE_URL = 'https://backend-nodejs-jobportal-production.up.railway.app/api';
+// API Base URL - Detect environment at runtime
+const getApiBaseUrl = (): string => {
+  // Check if we're running in development (localhost)
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname.toLowerCase();
+    const isLocalhost = hostname === 'localhost' || 
+                       hostname === '127.0.0.1' ||
+                       hostname.startsWith('192.168.') ||
+                       hostname.startsWith('10.') ||
+                       hostname.startsWith('172.') ||
+                       hostname.includes('.local');
+    
+    if (isLocalhost) {
+      return 'http://localhost:3000/api';
+    }
+  }
+  
+  // Production: Use Railway URL
+  return 'https://backend-nodejs-jobportal-production.up.railway.app/api';
+};
 
-// Create axios instance with Railway production URL
+// Get the API base URL
+const API_BASE_URL = getApiBaseUrl();
+
+// Log the API URL being used
+if (typeof window !== 'undefined') {
+  console.log('🔗 API Base URL:', API_BASE_URL);
+  console.log('🌐 Environment:', window.location.hostname === 'localhost' ? 'Development' : 'Production');
+}
+
+// Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -14,18 +41,19 @@ const api = axios.create({
 
 // Interceptor to ensure baseURL is always set correctly
 api.interceptors.request.use((config) => {
-  // Always use Railway production URL
-  config.baseURL = API_BASE_URL;
+  // Recalculate baseURL on each request to ensure it's correct
+  const currentBaseUrl = getApiBaseUrl();
+  config.baseURL = currentBaseUrl;
   
   // Build the full URL for logging
   const fullUrl = config.url?.startsWith('http') 
     ? config.url 
-    : `${API_BASE_URL}${config.url || ''}`;
+    : `${currentBaseUrl}${config.url || ''}`;
   
   console.log('📡 API Request:', {
     method: config.method?.toUpperCase(),
     fullUrl: fullUrl,
-    baseURL: API_BASE_URL,
+    baseURL: currentBaseUrl,
     endpoint: config.url
   });
   
@@ -307,11 +335,15 @@ export const dashboardAPI = {
       console.log('Extracted dashboard stats data:', data);
       
       // Ensure all stats are numbers, defaulting to 0 if undefined
+      // Handle both 'expiredJobs' and 'totalExpired' field names from API
+      const expiredJobsValue = data?.expiredJobs ?? data?.totalExpired ?? 0;
+      const totalResumesValue = data?.totalResumes ?? data?.totalResumesUploaded ?? data?.uploadedResumes ?? 0;
+      
       const stats: DashboardStats = {
         totalJobs: typeof data?.totalJobs === 'number' ? data.totalJobs : (Number(data?.totalJobs) || 0),
         totalApplications: typeof data?.totalApplications === 'number' ? data.totalApplications : (Number(data?.totalApplications) || 0),
-        expiredJobs: typeof data?.expiredJobs === 'number' ? data.expiredJobs : (Number(data?.expiredJobs) || 0),
-        totalResumes: typeof data?.totalResumes === 'number' ? data.totalResumes : (Number(data?.totalResumes) || 0),
+        expiredJobs: typeof expiredJobsValue === 'number' ? expiredJobsValue : (Number(expiredJobsValue) || 0),
+        totalResumes: typeof totalResumesValue === 'number' ? totalResumesValue : (Number(totalResumesValue) || 0),
       };
       
       console.log('Final dashboard stats:', stats);
@@ -372,7 +404,115 @@ export const resumeAPI = {
   getAllResumes: async (): Promise<Resume[]> => {
     const response = await api.get<any>('/resumes');
     const data = extractData<Resume[]>(response.data);
-    return Array.isArray(data) ? data : [];
+    // Normalize resume data to handle both old and new formats
+    return Array.isArray(data) ? data.map((resume: any) => ({
+      id: resume.id,
+      filename: resume.filename || resume.fileName || '',
+      fileName: resume.filename || resume.fileName || '',
+      fileSize: resume.fileSize,
+      jobId: resume.jobId || null,
+      jobTitle: resume.jobTitle || null,
+      status: resume.status || 'uploaded',
+      createdAt: resume.createdAt || resume.uploadedAt || '',
+      uploadedAt: resume.createdAt || resume.uploadedAt || '',
+      downloadUrl: resume.downloadUrl || (resume.id ? `${getApiBaseUrl().replace('/api', '')}/api/resumes/${resume.id}/download` : undefined),
+      viewUrl: resume.viewUrl || resume.cloudinaryUrl,
+      cloudinaryUrl: resume.cloudinaryUrl,
+    })) : [];
+  },
+  deleteResume: async (id: string | number): Promise<void> => {
+    try {
+      // Ensure ID is converted to string for URL
+      const resumeId = String(id);
+      console.log('Attempting to delete resume with ID:', resumeId);
+      
+      const response = await api.delete(`/resumes/${resumeId}`);
+      console.log('Delete response status:', response.status);
+      
+      // Check if response has success message
+      if (response.data && response.data.message) {
+        console.log('Delete response message:', response.data.message);
+      }
+      return;
+    } catch (error: any) {
+      console.error('Delete resume error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+      });
+      
+      // Re-throw with more context
+      if (error.response) {
+        // Server responded with error
+        let errorMsg = error.response.data?.message;
+        
+        // Handle 404 specifically
+        if (error.response.status === 404) {
+          if (!errorMsg || errorMsg.includes('Not Found')) {
+            errorMsg = `Resume not found or delete endpoint not available. The resume may have already been deleted, or the backend endpoint may not be configured.`;
+          }
+        } else {
+          errorMsg = errorMsg || `Failed to delete resume: ${error.response.status} ${error.response.statusText}`;
+        }
+        
+        throw new Error(errorMsg);
+      } else if (error.request) {
+        // Request made but no response
+        throw new Error('No response from server. Please check your connection.');
+      } else {
+        // Error setting up request
+        throw new Error(error.message || 'Failed to delete resume');
+      }
+    }
+  },
+  downloadResume: async (id: string | number, filename?: string): Promise<void> => {
+    try {
+      // Download file with authentication token
+      const response = await api.get(`/resumes/${id}/download`, {
+        responseType: 'blob', // Important: set response type to blob
+      });
+
+      // Try to extract filename from Content-Disposition header
+      let downloadFilename = filename || `resume-${id}.pdf`;
+      const contentDisposition = response.headers['content-disposition'];
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          downloadFilename = filenameMatch[1].replace(/['"]/g, '');
+          // Decode URI if needed
+          try {
+            downloadFilename = decodeURIComponent(downloadFilename);
+          } catch {
+            // If decoding fails, use as is
+          }
+        }
+      }
+
+      // Create a blob from the response
+      const blob = new Blob([response.data]);
+      
+      // Create a temporary URL for the blob
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create a temporary anchor element and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = downloadFilename;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      console.error('Error downloading resume:', error);
+      throw error;
+    }
+  },
+  getResumeUrl: async (id: string | number): Promise<{ viewUrl: string; downloadUrl: string }> => {
+    const response = await api.get<any>(`/resumes/${id}/url`);
+    return extractData<{ viewUrl: string; downloadUrl: string }>(response.data);
   },
 };
 

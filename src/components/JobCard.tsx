@@ -40,12 +40,14 @@ export const JobCard = ({
     >
       <Card
         sx={{
-          mb: 3,
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
           borderRadius: 3,
           boxShadow: isExpired ? '0 2px 4px rgba(0,0,0,0.08)' : '0 2px 8px rgba(0,0,0,0.1)',
           transition: 'all 0.3s ease',
           opacity: isExpired ? 0.85 : 1,
-          border: isExpired ? '2px solid #ffebee' : '1px solid transparent',
+          border: isExpired ? '2px solid #ffebee' : '1px solid #e0e0e0',
           bgcolor: isExpired ? '#fafafa' : 'white',
           position: 'relative',
           ...(isExpired && {
@@ -63,10 +65,11 @@ export const JobCard = ({
           '&:hover': {
             boxShadow: isExpired ? '0 2px 8px rgba(0,0,0,0.12)' : '0 4px 16px rgba(0,0,0,0.15)',
             transform: isExpired ? 'none' : 'translateY(-2px)',
+            borderColor: isExpired ? '#ffebee' : 'primary.main',
           },
         }}
       >
-        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+        <CardContent sx={{ p: { xs: 2.5, sm: 3 }, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
             <Box sx={{ flex: 1 }}>
               <Typography
@@ -74,9 +77,10 @@ export const JobCard = ({
                 component="h2"
                 sx={{
                   fontWeight: 700,
-                  mb: 1,
+                  mb: 1.5,
                   fontSize: { xs: '1.25rem', sm: '1.5rem' },
                   color: isExpired ? 'text.secondary' : 'text.primary',
+                  lineHeight: 1.3,
                 }}
               >
                 {job.title}
@@ -87,7 +91,7 @@ export const JobCard = ({
                   color="error"
                   size="small"
                   sx={{ 
-                    mb: 1,
+                    mb: 1.5,
                     fontWeight: 600,
                     '& .MuiChip-icon': {
                       color: 'error.main',
@@ -99,7 +103,7 @@ export const JobCard = ({
             </Box>
           </Box>
 
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2, flexGrow: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
               <Business sx={{ fontSize: 18, color: 'text.secondary' }} />
               <Typography variant="body2" color="text.secondary">
@@ -120,14 +124,14 @@ export const JobCard = ({
                 </Typography>
               </Box>
             )}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-              <Schedule sx={{ fontSize: 18, color: 'text.secondary' }} />
-              <Typography variant="body2" color="text.secondary">
-                {isValidDate
-                  ? `Expires: ${expiryDate!.toLocaleDateString()}`
-                  : 'No expiry date'}
-              </Typography>
-            </Box>
+            {isValidDate && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                <Schedule sx={{ fontSize: 18, color: 'text.secondary' }} />
+                <Typography variant="body2" color="text.secondary">
+                  Expires: {expiryDate!.toLocaleDateString()}
+                </Typography>
+              </Box>
+            )}
           </Box>
 
           {job.description && (
@@ -142,6 +146,7 @@ export const JobCard = ({
                 WebkitLineClamp: 3,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
+                flexGrow: 1,
               }}
             >
               {job.description}
@@ -155,7 +160,7 @@ export const JobCard = ({
               alignItems: 'center',
               flexWrap: 'wrap',
               gap: 2,
-              mt: 2,
+              mt: 'auto',
               pt: 2,
               borderTop: '1px solid',
               borderColor: 'divider',
@@ -175,7 +180,7 @@ export const JobCard = ({
                     fontWeight: 600,
                   }}
                 >
-                  Mark as Expired
+                  Mark as Filled
                 </Button>
               )}
             </Box>

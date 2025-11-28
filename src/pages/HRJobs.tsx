@@ -282,7 +282,18 @@ export const HRJobs = () => {
             </motion.div>
           ) : (
             <AnimatePresence mode="wait">
-              <Box>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: '1fr',
+                    sm: 'repeat(2, 1fr)',
+                    md: 'repeat(2, 1fr)',
+                    lg: 'repeat(3, 1fr)',
+                  },
+                  gap: 3,
+                }}
+              >
                 {filteredJobs.map((job, index) => (
                   <JobCard
                     key={job.id}

@@ -29,7 +29,11 @@ interface FileUploadState {
   resume?: Resume;
 }
 
-export const ResumeUpload = () => {
+interface ResumeUploadProps {
+  onUploadSuccess?: () => void;
+}
+
+export const ResumeUpload = ({ onUploadSuccess }: ResumeUploadProps) => {
   const [files, setFiles] = useState<FileUploadState[]>([]);
 
   const uploadFile = async (fileState: FileUploadState, index: number) => {
@@ -55,6 +59,13 @@ export const ResumeUpload = () => {
       });
 
       toast.success(`Successfully uploaded ${fileState.file.name}`);
+      
+      // Call success callback if provided (after a short delay to ensure state is updated)
+      if (onUploadSuccess) {
+        setTimeout(() => {
+          onUploadSuccess();
+        }, 500);
+      }
     } catch (error: any) {
       setFiles((prev) => {
         const updated = [...prev];
