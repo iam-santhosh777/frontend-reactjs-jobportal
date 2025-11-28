@@ -4,7 +4,6 @@ import {
   TextField, 
   Button, 
   Box, 
-  Grid, 
   Typography,
   InputAdornment,
   FormHelperText,
@@ -59,9 +58,9 @@ export const JobForm = ({ onSuccess, onCancel }: JobFormProps) => {
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-      <Grid container spacing={3}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {/* Job Title */}
-        <Grid item xs={12}>
+        <Box>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -108,10 +107,12 @@ export const JobForm = ({ onSuccess, onCancel }: JobFormProps) => {
               </Typography>
             </FormHelperText>
           </motion.div>
-        </Grid>
+        </Box>
 
-        {/* Company */}
-        <Grid item xs={12} sm={6}>
+        {/* Company and Location */}
+        <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', sm: 'row' } }}>
+          {/* Company */}
+          <Box sx={{ flex: 1 }}>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -158,10 +159,10 @@ export const JobForm = ({ onSuccess, onCancel }: JobFormProps) => {
               </Typography>
             </FormHelperText>
           </motion.div>
-        </Grid>
+          </Box>
 
-        {/* Location */}
-        <Grid item xs={12} sm={6}>
+          {/* Location */}
+          <Box sx={{ flex: 1 }}>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -208,10 +209,13 @@ export const JobForm = ({ onSuccess, onCancel }: JobFormProps) => {
               </Typography>
             </FormHelperText>
           </motion.div>
-        </Grid>
+          </Box>
+        </Box>
 
-        {/* Salary */}
-        <Grid item xs={12} sm={6}>
+        {/* Salary and Expiry Date */}
+        <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', sm: 'row' } }}>
+          {/* Salary */}
+          <Box sx={{ flex: 1 }}>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -252,10 +256,10 @@ export const JobForm = ({ onSuccess, onCancel }: JobFormProps) => {
               }}
             />
           </motion.div>
-        </Grid>
+          </Box>
 
-        {/* Expiry Date */}
-        <Grid item xs={12} sm={6}>
+          {/* Expiry Date */}
+          <Box sx={{ flex: 1 }}>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -311,10 +315,11 @@ export const JobForm = ({ onSuccess, onCancel }: JobFormProps) => {
               </Typography>
             </FormHelperText>
           </motion.div>
-        </Grid>
+          </Box>
+        </Box>
 
         {/* Job Description */}
-        <Grid item xs={12}>
+        <Box>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -366,10 +371,10 @@ export const JobForm = ({ onSuccess, onCancel }: JobFormProps) => {
               </Typography>
             </FormHelperText>
           </motion.div>
-        </Grid>
+        </Box>
 
         {/* Action Buttons */}
-        <Grid item xs={12}>
+        <Box>
           <Box 
             sx={{ 
               display: 'flex', 
@@ -434,8 +439,8 @@ export const JobForm = ({ onSuccess, onCancel }: JobFormProps) => {
               </Button>
             </motion.div>
           </Box>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Box>
   );
 };

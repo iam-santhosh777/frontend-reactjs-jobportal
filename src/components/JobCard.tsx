@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Card, CardContent, Typography, Button, Box, Chip, IconButton } from '@mui/material';
+import { Card, CardContent, Typography, Button, Box, Chip } from '@mui/material';
 import { LocationOn, Business, AttachMoney, Schedule, Send, Block } from '@mui/icons-material';
 import type { Job } from '../types';
 

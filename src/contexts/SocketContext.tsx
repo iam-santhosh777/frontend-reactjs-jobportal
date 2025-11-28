@@ -1,8 +1,9 @@
-import { createContext, useContext, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { socketService } from '../services/socket';
 import { useAuth } from './AuthContext';
 import { toast } from 'react-hot-toast';
-import type { JobApplication, Job } from '../types';
+import type { JobApplication } from '../types';
 
 // Helper function to normalize application from socket (same as in api.ts)
 const normalizeSocketApplication = (application: any): JobApplication => {
@@ -48,7 +49,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     if (isAuthenticated) {
       const token = localStorage.getItem('token');
       if (token) {
-        const socket = socketService.connect(token);
+        socketService.connect(token);
 
         // Listen for new job applications (HR only)
         if (user?.role === 'hr') {
@@ -72,12 +73,14 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
           const jobTitle = job.title || job.Title || 'a job';
           
           if (user?.role === 'hr') {
-            toast.info(`Job "${jobTitle}" has been expired`, {
+            toast(`Job "${jobTitle}" has been expired`, {
               duration: 4000,
+              icon: 'ℹ️',
             });
           } else {
-            toast.warning(`Job "${jobTitle}" is no longer available`, {
+            toast(`Job "${jobTitle}" is no longer available`, {
               duration: 4000,
+              icon: '⚠️',
             });
           }
           

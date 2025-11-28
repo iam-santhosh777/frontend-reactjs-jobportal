@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import type { User, LoginCredentials } from '../types';
@@ -85,4 +86,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
 

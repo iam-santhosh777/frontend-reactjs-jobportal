@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { DashboardWidget } from '../components/DashboardWidget';
-import { jobsAPI, dashboardAPI } from '../services/api';
+import { dashboardAPI } from '../services/api';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { Typography, Box, Grid, Button } from '@mui/material';
+import { Typography, Box, Button } from '@mui/material';
 import { Add, Work, Assignment, Schedule, Description } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import type { Job, DashboardStats } from '../types';
+import type { DashboardStats } from '../types';
 
 export const HRDashboard = () => {
   const [stats, setStats] = useState<DashboardStats>({
@@ -16,7 +16,6 @@ export const HRDashboard = () => {
     expiredJobs: 0,
     totalResumes: 0,
   });
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,14 +41,11 @@ export const HRDashboard = () => {
 
   const loadData = async () => {
     try {
-      setLoading(true);
       const statsData = await dashboardAPI.getStats();
       setStats(statsData);
     } catch (error: any) {
       toast.error('Failed to load dashboard data');
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -75,18 +71,15 @@ export const HRDashboard = () => {
           </Box>
 
           {/* Stats Widgets */}
-          <Grid 
-            container 
-            spacing={3} 
+          <Box 
             sx={{ 
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+              gap: 3,
               mb: 4,
-              '& .MuiGrid-item': {
-                display: 'flex',
-                height: { xs: 'auto', md: '180px' },
-              }
             }}
           >
-            <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{ display: 'flex', height: { xs: 'auto', md: '180px' } }}>
               <DashboardWidget
                 title="Total Jobs Posted"
                 value={stats.totalJobs}
@@ -94,8 +87,8 @@ export const HRDashboard = () => {
                 color="primary"
                 index={0}
               />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            </Box>
+            <Box sx={{ display: 'flex', height: { xs: 'auto', md: '180px' } }}>
               <DashboardWidget
                 title="Total Applications"
                 value={stats.totalApplications}
@@ -103,8 +96,8 @@ export const HRDashboard = () => {
                 color="success"
                 index={1}
               />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            </Box>
+            <Box sx={{ display: 'flex', height: { xs: 'auto', md: '180px' } }}>
               <DashboardWidget
                 title="Expired Jobs"
                 value={stats.expiredJobs}
@@ -112,8 +105,8 @@ export const HRDashboard = () => {
                 color="error"
                 index={2}
               />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            </Box>
+            <Box sx={{ display: 'flex', height: { xs: 'auto', md: '180px' } }}>
               <DashboardWidget
                 title="Resumes Uploaded"
                 value={stats.totalResumes}
@@ -121,8 +114,8 @@ export const HRDashboard = () => {
                 color="info"
                 index={3}
               />
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           {/* Quick Actions */}
           <Box

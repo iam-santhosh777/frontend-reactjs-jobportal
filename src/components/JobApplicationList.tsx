@@ -109,7 +109,7 @@ export const JobApplicationList = () => {
       headerName: 'Applied At',
       width: 200,
       flex: 1,
-      valueFormatter: (value) => {
+      valueFormatter: (value: any) => {
         if (!value) return 'Invalid Date';
         const date = new Date(value);
         if (isNaN(date.getTime())) return 'Invalid Date';
@@ -120,7 +120,7 @@ export const JobApplicationList = () => {
       field: 'status',
       headerName: 'Status',
       width: 150,
-      renderCell: (params) => (
+      renderCell: (params: any) => (
         <Chip
           icon={getStatusIcon(params.value as JobApplication['status'])}
           label={params.value || 'pending'}
