@@ -1,140 +1,33 @@
 import axios from 'axios';
 import type { LoginCredentials, AuthResponse, Job, JobApplication, DashboardStats, Resume } from '../types';
 
-// API Base URL from environment variables
-// This function is called at runtime to ensure correct URL detection
-const getApiBaseUrl = (): string => {
-  const PRODUCTION_API_URL = 'https://backend-nodejs-jobportal-production.up.railway.app/api';
-  const DEVELOPMENT_API_URL = 'http://localhost:3000/api';
-  
-  // CRITICAL: Runtime check MUST be first - this is the most reliable indicator
-  // We check the actual browser location at runtime, not build-time variables
-  if (typeof window !== 'undefined' && window.location) {
-    const hostname = window.location.hostname.toLowerCase();
-    const origin = window.location.origin.toLowerCase();
-    const href = window.location.href.toLowerCase();
-    
-    // Explicitly check for Vercel domains (most common deployment)
-    const isVercel = hostname.includes('vercel.app') || 
-                     hostname.includes('vercel.com') ||
-                     origin.includes('vercel.app') ||
-                     origin.includes('vercel.com') ||
-                     href.includes('vercel.app') ||
-                     href.includes('vercel.com');
-    
-    // Check if it's explicitly localhost or local network IP
-    const isExplicitLocalhost = hostname === 'localhost' || 
-                                hostname === '127.0.0.1' ||
-                                hostname.startsWith('192.168.') ||
-                                hostname.startsWith('10.') ||
-                                hostname.startsWith('172.') ||
-                                hostname.includes('.local');
-    
-    // DEFAULT TO PRODUCTION: If it's Vercel OR any non-localhost domain, use production
-    // This is the safest default - only use localhost if we're EXPLICITLY on localhost
-    if (isVercel || !isExplicitLocalhost) {
-      const detectedUrl = PRODUCTION_API_URL;
-      console.log('🌐 RUNTIME DETECTION: Using PRODUCTION URL', {
-        hostname,
-        origin,
-        href,
-        isVercel,
-        isExplicitLocalhost,
-        detectedUrl,
-        reason: isVercel ? 'Vercel domain detected' : 'Non-localhost domain detected'
-      });
-      return detectedUrl;
-    }
-    
-    // Only use localhost if we're EXPLICITLY on localhost
-    if (isExplicitLocalhost) {
-      console.log('💻 RUNTIME DETECTION: Using LOCALHOST URL (explicit localhost detected)', {
-        hostname,
-        origin,
-        detectedUrl: DEVELOPMENT_API_URL
-      });
-      return DEVELOPMENT_API_URL;
-    }
-  }
-  
-  // Priority 2: Explicitly set via environment variable (if runtime check didn't work)
-  if (import.meta.env.VITE_API_BASE_URL) {
-    const envUrl = String(import.meta.env.VITE_API_BASE_URL).trim();
-    if (envUrl && !envUrl.includes('localhost')) {
-      console.log('✅ Using VITE_API_BASE_URL from environment:', envUrl);
-      return envUrl;
-    }
-  }
-  
-  // Priority 3: Check if we're in production build (build-time check as fallback)
-  if (import.meta.env.PROD || import.meta.env.MODE === 'production') {
-    console.log('📦 Production build detected (build-time fallback). Using Railway URL:', PRODUCTION_API_URL);
-    return PRODUCTION_API_URL;
-  }
-  
-  // Priority 4: Last resort - default to production if we can't determine
-  // This is safer than defaulting to localhost
-  console.warn('⚠️ Could not determine environment. Defaulting to PRODUCTION URL for safety:', PRODUCTION_API_URL);
-  return PRODUCTION_API_URL;
-};
+// API Base URL - Always use Railway production URL
+const API_BASE_URL = 'https://backend-nodejs-jobportal-production.up.railway.app/api';
 
-// Create axios instance without baseURL initially - we'll set it dynamically
+// Create axios instance with Railway production URL
 const api = axios.create({
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor to ensure baseURL is always correct (runtime check on EVERY request)
-// This MUST be the first interceptor to ensure baseURL is set correctly
+// Interceptor to ensure baseURL is always set correctly
 api.interceptors.request.use((config) => {
-  // ALWAYS recalculate baseURL on each request to ensure it's correct
-  // This overrides any baseURL that might have been set incorrectly
-  const currentBaseUrl = getApiBaseUrl();
-  
-  // Force set the baseURL - this overrides any previous value
-  config.baseURL = currentBaseUrl;
+  // Always use Railway production URL
+  config.baseURL = API_BASE_URL;
   
   // Build the full URL for logging
   const fullUrl = config.url?.startsWith('http') 
     ? config.url 
-    : `${currentBaseUrl}${config.url || ''}`;
-  
-  // Log the final URL being called for debugging
-  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'N/A';
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'N/A';
+    : `${API_BASE_URL}${config.url || ''}`;
   
   console.log('📡 API Request:', {
     method: config.method?.toUpperCase(),
     fullUrl: fullUrl,
-    baseURL: currentBaseUrl,
-    endpoint: config.url,
-    hostname: hostname,
-    origin: origin,
-    isVercel: hostname.includes('vercel.app') || hostname.includes('vercel.com')
+    baseURL: API_BASE_URL,
+    endpoint: config.url
   });
-  
-  // CRITICAL: Warn if deployed but using localhost (this should NEVER happen)
-  if (typeof window !== 'undefined') {
-    const isDeployed = hostname !== 'localhost' && 
-                      hostname !== '127.0.0.1' &&
-                      !hostname.startsWith('192.168.') &&
-                      !hostname.startsWith('10.') &&
-                      !hostname.startsWith('172.') &&
-                      !hostname.includes('.local');
-    
-    if (isDeployed && currentBaseUrl.includes('localhost')) {
-      console.error('❌❌❌ CRITICAL ERROR: Deployed to production but using localhost URL! ❌❌❌');
-      console.error('Hostname:', hostname);
-      console.error('Origin:', origin);
-      console.error('BaseURL:', currentBaseUrl);
-      console.error('Full URL:', fullUrl);
-      console.error('This should not happen. The runtime detection should have caught this.');
-      // Force use production URL as emergency fallback
-      config.baseURL = 'https://backend-nodejs-jobportal-production.up.railway.app/api';
-      console.error('🔄 Emergency fallback: Forcing production URL');
-    }
-  }
   
   return config;
 });
