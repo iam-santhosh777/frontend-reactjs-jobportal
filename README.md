@@ -40,6 +40,40 @@ A complete React.js frontend application for an HRMS (Human Resource Management 
   - Toast notifications + automatic list updates
   - View all applications in a table format
 
+## Environment Setup
+
+### Development Environment
+
+1. Create a `.env.development` file in the root directory:
+```env
+VITE_API_BASE_URL=http://localhost:3000/api
+```
+
+2. Run the development server:
+```bash
+npm run dev
+```
+
+### Production Environment
+
+1. Create a `.env.production` file in the root directory:
+```env
+VITE_API_BASE_URL=https://backend-nodejs-jobportal-production.up.railway.app/api
+```
+
+2. Build for production:
+```bash
+npm run build
+```
+
+### Environment Variables
+
+- `VITE_API_BASE_URL`: The base URL for the backend API
+  - Development: `http://localhost:3000/api`
+  - Production: `https://backend-nodejs-jobportal-production.up.railway.app/api`
+
+**Note:** Vite automatically loads `.env.development` when running `npm run dev` and `.env.production` when building with `npm run build`.
+
 ## Tech Stack
 
 - **React.js 19+** with TypeScript
@@ -87,16 +121,30 @@ src/
    ```
 
 2. **Configure environment variables:**
-   Create a `.env` file in the root directory:
-   ```env
-   VITE_API_BASE_URL=http://localhost:3000/api
-   VITE_SOCKET_URL=http://localhost:3000
-   ```
+   
+   The project uses separate environment files for development and production:
+   
+   - `.env.development` - Used when running `npm run dev`
+   - `.env.production` - Used when running `npm run build`
+   
+   These files are already created with the correct values:
+   - Development: `http://localhost:3000/api`
+   - Production: `https://backend-nodejs-jobportal-production.up.railway.app/api`
+   
+   **Note:** The socket URL is automatically derived from the API URL.
 
 3. **Start development server:**
+   
+   **Local development (connects to localhost backend):**
    ```bash
    npm run dev
    ```
+   
+   **Local development with production backend (for testing):**
+   ```bash
+   npm run dev:prod
+   ```
+   This runs the dev server locally (with hot reload) but connects to the production Railway backend. Uses `.env.dev-prod` file.
 
 4. **Build for production:**
    ```bash

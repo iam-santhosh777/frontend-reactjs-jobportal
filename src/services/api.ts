@@ -1,23 +1,10 @@
 import axios from 'axios';
 import type { LoginCredentials, AuthResponse, Job, JobApplication, DashboardStats, Resume } from '../types';
 
-// Determine API base URL based on environment
-const getApiBaseUrl = () => {
-  // If VITE_API_BASE_URL is explicitly set, use it
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
-  }
-  
-  // In production, use the Railway backend URL
-  if (import.meta.env.PROD) {
-    return 'https://backend-nodejs-jobportal-production.up.railway.app/api';
-  }
-  
-  // In development, use localhost
-  return 'http://localhost:3000/api';
-};
-
-const API_BASE_URL = getApiBaseUrl();
+// API Base URL from environment variables
+// Uses VITE_API_BASE_URL from .env.development or .env.production
+// Fallback to localhost if not set (for backward compatibility)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

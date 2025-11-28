@@ -1,7 +1,20 @@
 import { io, Socket } from 'socket.io-client';
 import type { JobApplication, Job } from '../types';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000';
+// Socket URL from environment variables
+// Derives from API URL (same host, different protocol)
+const getSocketUrl = () => {
+  const apiUrl = import.meta.env.VITE_API_BASE_URL;
+  if (apiUrl) {
+    // Extract base URL from API URL (remove /api suffix if present)
+    const baseUrl = apiUrl.replace(/\/api\/?$/, '');
+    return baseUrl;
+  }
+  // Fallback to localhost
+  return 'http://localhost:3000';
+};
+
+const SOCKET_URL = getSocketUrl();
 
 class SocketService {
   private socket: Socket | null = null;
