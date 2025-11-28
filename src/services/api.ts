@@ -2,29 +2,33 @@ import axios from 'axios';
 import type { LoginCredentials, AuthResponse, Job, JobApplication, DashboardStats, Resume } from '../types';
 
 // API Base URL from environment variables
-// Priority:
-// 1. VITE_API_BASE_URL from environment (set in Vercel or .env files)
-// 2. If in production mode and not set, use Railway production URL
-// 3. Fallback to localhost for development
-const getApiBaseUrl = () => {
-  // If explicitly set, use it
+// This function is called at runtime to ensure correct URL detection
+const getApiBaseUrl = (): string => {
+  // Runtime check FIRST: if deployed to Vercel or any remote server (not localhost)
+  // This takes priority because it's the most reliable indicator
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname.toLowerCase();
+    const isLocalhost = hostname === 'localhost' || 
+                       hostname === '127.0.0.1' ||
+                       hostname.startsWith('192.168.') ||
+                       hostname.startsWith('10.') ||
+                       hostname.startsWith('172.') ||
+                       hostname.includes('.local');
+    
+    // If NOT localhost, we're deployed - ALWAYS use Railway URL
+    if (!isLocalhost) {
+      console.log('🌐 Detected deployment environment. Using Railway production URL.');
+      return 'https://backend-nodejs-jobportal-production.up.railway.app/api';
+    }
+  }
+  
+  // If explicitly set via environment variable, use it
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
   
-  // Check if we're in production (build-time check)
-  const isProductionBuild = import.meta.env.PROD || import.meta.env.MODE === 'production';
-  
-  // Runtime check: if deployed to Vercel or any remote server (not localhost)
-  const isDeployed = typeof window !== 'undefined' && 
-    window.location.hostname !== 'localhost' && 
-    window.location.hostname !== '127.0.0.1' &&
-    !window.location.hostname.startsWith('192.168.') &&
-    !window.location.hostname.startsWith('10.') &&
-    !window.location.hostname.startsWith('172.');
-  
-  // If production build OR deployed to a remote server, use Railway URL
-  if (isProductionBuild || isDeployed) {
+  // Check if we're in production build
+  if (import.meta.env.PROD || import.meta.env.MODE === 'production') {
     return 'https://backend-nodejs-jobportal-production.up.railway.app/api';
   }
   
@@ -32,15 +36,30 @@ const getApiBaseUrl = () => {
   return 'http://localhost:3000/api';
 };
 
+// Get initial API URL
 const API_BASE_URL = getApiBaseUrl();
 
-// Log API URL for debugging (always log in development, conditionally in production)
-if (import.meta.env.DEV || (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app'))) {
+// Log API URL for debugging and warn if wrong URL in production
+if (typeof window !== 'undefined') {
+  const hostname = window.location.hostname;
+  const isDeployed = hostname !== 'localhost' && 
+                    hostname !== '127.0.0.1' &&
+                    !hostname.startsWith('192.168.') &&
+                    !hostname.startsWith('10.') &&
+                    !hostname.startsWith('172.');
+  
   console.log('🔗 API Base URL:', API_BASE_URL);
   console.log('🌍 Environment:', import.meta.env.MODE);
   console.log('📦 Production Mode:', import.meta.env.PROD);
-  console.log('🌐 Hostname:', typeof window !== 'undefined' ? window.location.hostname : 'N/A');
+  console.log('🌐 Hostname:', hostname);
+  console.log('🚀 Is Deployed:', isDeployed);
   console.log('🔧 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL || 'Not set');
+  
+  // Warn if deployed but using localhost
+  if (isDeployed && API_BASE_URL.includes('localhost')) {
+    console.error('❌ ERROR: Deployed to production but using localhost URL!');
+    console.error('This should not happen. Check environment configuration.');
+  }
 }
 
 const api = axios.create({
@@ -50,7 +69,30 @@ const api = axios.create({
   },
 });
 
-// Add token to requests
+// Interceptor to ensure baseURL is always correct (runtime check)
+api.interceptors.request.use((config) => {
+  // Recalculate baseURL on each request to ensure it's correct
+  const currentBaseUrl = getApiBaseUrl();
+  if (config.baseURL !== currentBaseUrl) {
+    console.warn('⚠️ BaseURL mismatch detected. Updating:', {
+      old: config.baseURL,
+      new: currentBaseUrl,
+      url: config.url,
+      fullUrl: `${currentBaseUrl}${config.url}`
+    });
+    config.baseURL = currentBaseUrl;
+  }
+  // Log the final URL being called
+  console.log('📡 API Request:', {
+    method: config.method?.toUpperCase(),
+    url: `${config.baseURL}${config.url}`,
+    baseURL: config.baseURL,
+    endpoint: config.url
+  });
+  return config;
+});
+
+// Add token to requests (this runs after baseURL check)
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
