@@ -118,12 +118,13 @@ export const ResumeList = ({
           sx={{
             display: 'grid',
             gridTemplateColumns: {
-              xs: 'repeat(2, 1fr)',
+              xs: '1fr',
               sm: 'repeat(2, 1fr)',
-              md: '1fr',
+              md: 'repeat(2, 1fr)',
+              lg: 'repeat(3, 1fr)',
             },
             gap: { xs: 1.5, sm: 2, md: 2.5 },
-            p: { xs: 2, sm: 3 },
+            p: { xs: 2, sm: 2.5, md: 3 },
           }}
         >
           {resumes.map((resume) => (

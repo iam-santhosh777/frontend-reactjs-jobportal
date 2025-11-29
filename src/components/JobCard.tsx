@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Card, CardContent, Typography, Button, Box, Chip, IconButton, useMediaQuery, useTheme } from '@mui/material';
-import { LocationOn, Business, AttachMoney, Schedule, Send, Block } from '@mui/icons-material';
+import { LocationOn, Business, Schedule, Send, Block } from '@mui/icons-material';
 import type { Job } from '../types';
 
 interface JobCardProps {
@@ -78,12 +78,14 @@ export const JobCard = ({
         }}
       >
         <CardContent sx={{ 
-          p: { xs: 2, sm: 2.5 }, 
+          pt: { xs: 2, sm: 2.5 },
+          px: { xs: 2, sm: 2.5 },
+          pb: 0,
           flexGrow: 1, 
           display: 'flex', 
           flexDirection: 'column',
           position: 'relative',
-          '&:last-child': { pb: { xs: 2, sm: 2.5 } }
+          '&:last-child': { pb: 0 }
         }}>
           {/* Mark as Filled button - positioned at top right */}
           {showExpireButton && !isExpired && (
@@ -198,7 +200,7 @@ export const JobCard = ({
           }}>
             <Box sx={{ 
               display: 'flex', 
-              alignItems: 'flex-start', 
+              alignItems: 'center', 
               gap: { xs: 0.75, sm: 1 }, 
               flexWrap: 'nowrap',
             }}>
@@ -206,7 +208,8 @@ export const JobCard = ({
                 fontSize: { xs: 18, sm: 20, md: 22 }, 
                 color: 'primary.main',
                 flexShrink: 0,
-                mt: 0.25,
+                display: 'flex',
+                alignItems: 'center',
               }} />
               <Typography 
                 variant="body2" 
@@ -217,6 +220,7 @@ export const JobCard = ({
                   flex: 1,
                   minWidth: 0,
                   wordBreak: 'break-word',
+                  lineHeight: 1.5,
                 }}
               >
                 {job.company || 'Company not specified'}
@@ -224,7 +228,7 @@ export const JobCard = ({
             </Box>
             <Box sx={{ 
               display: 'flex', 
-              alignItems: 'flex-start', 
+              alignItems: 'center', 
               gap: { xs: 0.75, sm: 1 }, 
               flexWrap: 'nowrap',
             }}>
@@ -232,7 +236,8 @@ export const JobCard = ({
                 fontSize: { xs: 18, sm: 20, md: 22 }, 
                 color: 'primary.main',
                 flexShrink: 0,
-                mt: 0.25,
+                display: 'flex',
+                alignItems: 'center',
               }} />
               <Typography 
                 variant="body2" 
@@ -243,6 +248,7 @@ export const JobCard = ({
                   flex: 1,
                   minWidth: 0,
                   wordBreak: 'break-word',
+                  lineHeight: 1.5,
                 }}
               >
                 {job.location || 'Location not specified'}
@@ -251,16 +257,24 @@ export const JobCard = ({
             {job.salary && (
               <Box sx={{ 
                 display: 'flex', 
-                alignItems: 'flex-start', 
+                alignItems: 'center', 
                 gap: { xs: 0.75, sm: 1 }, 
                 flexWrap: 'nowrap',
               }}>
-                <AttachMoney sx={{ 
-                  fontSize: { xs: 18, sm: 20, md: 22 }, 
-                  color: 'primary.main',
-                  flexShrink: 0,
-                  mt: 0.25,
-                }} />
+                <Typography 
+                  component="span"
+                  sx={{ 
+                    fontSize: { xs: 18, sm: 20, md: 22 }, 
+                    color: 'primary.main',
+                    flexShrink: 0,
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    lineHeight: 1,
+                  }}
+                >
+                  ₹
+                </Typography>
                 <Typography 
                   variant="body2" 
                   color="text.primary"
@@ -271,6 +285,7 @@ export const JobCard = ({
                     flex: 1,
                     minWidth: 0,
                     wordBreak: 'break-word',
+                    lineHeight: 1.5,
                   }}
                 >
                   {job.salary}
@@ -280,7 +295,7 @@ export const JobCard = ({
             {isValidDate && (
               <Box sx={{ 
                 display: 'flex', 
-                alignItems: 'flex-start', 
+                alignItems: 'center', 
                 gap: { xs: 0.75, sm: 1 }, 
                 flexWrap: 'nowrap',
               }}>
@@ -288,7 +303,8 @@ export const JobCard = ({
                   fontSize: { xs: 18, sm: 20, md: 22 }, 
                   color: isExpired ? 'error.main' : 'primary.main',
                   flexShrink: 0,
-                  mt: 0.25,
+                  display: 'flex',
+                  alignItems: 'center',
                 }} />
                 <Typography 
                   variant="body2" 
@@ -299,6 +315,7 @@ export const JobCard = ({
                     flex: 1,
                     minWidth: 0,
                     wordBreak: 'break-word',
+                    lineHeight: 1.5,
                   }}
                 >
                   Expires: {expiryDate!.toLocaleDateString()}
@@ -307,24 +324,27 @@ export const JobCard = ({
             )}
           </Box>
 
-          <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', mb: { xs: 1.25, sm: 1.5 } }}>
-            {job.description && (
+          {job.description && (
+            <Box sx={{ 
+              mb: { xs: 1.25, sm: 1.5 },
+            }}>
               <Typography
                 variant="body2"
                 sx={{
                   color: 'text.secondary',
-                  lineHeight: 1.6,
+                  lineHeight: 1.5,
                   display: '-webkit-box',
                   WebkitLineClamp: { xs: 2, sm: 3 },
                   WebkitBoxOrient: 'vertical',
                   overflow: 'hidden',
+                  textOverflow: 'ellipsis',
                   fontSize: { xs: '0.8125rem', sm: '0.875rem', md: '0.9375rem' },
                 }}
               >
                 {job.description}
               </Typography>
-            )}
-          </Box>
+            </Box>
+          )}
 
           {/* Button area - always rendered to maintain consistent height */}
           <Box
@@ -335,10 +355,7 @@ export const JobCard = ({
               flexDirection: 'row',
               gap: { xs: 1, sm: 1.5 },
               mt: 'auto',
-              pt: { xs: 1.25, sm: 1.5 },
               minHeight: { xs: 48, sm: 56 },
-              borderTop: '1px solid',
-              borderColor: 'rgba(0, 0, 0, 0.08)',
             }}
           >
             {showApplyButton && !isExpired ? (

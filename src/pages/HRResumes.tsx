@@ -6,7 +6,7 @@ import { DeleteResumeDialog } from '../components/DeleteResumeDialog';
 import { PageHeader } from '../components/shared/PageHeader';
 import { useResumes } from '../hooks/useResumes';
 import { motion } from 'framer-motion';
-import { Container, Box, Paper, useMediaQuery, useTheme, Button } from '@mui/material';
+import { Box, Paper, useMediaQuery, useTheme, Button } from '@mui/material';
 import { Refresh } from '@mui/icons-material';
 import type { Resume } from '../types';
 
@@ -58,7 +58,14 @@ export const HRResumes = () => {
 
   return (
     <Layout>
-      <Container maxWidth="xl" sx={{ px: { xs: 1, sm: 2, md: 3 } }}>
+      <Box
+        sx={{
+          width: '100%',
+          px: { xs: 1, sm: 2, md: 3 },
+          mx: 'auto',
+          maxWidth: { xs: '100%', sm: '100%', md: '1536px' },
+        }}
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -78,6 +85,8 @@ export const HRResumes = () => {
                   textTransform: 'none',
                   fontWeight: 600,
                   width: { xs: '100%', sm: 'auto' },
+                  px: { xs: 2, sm: 3 },
+                  py: { xs: 1, sm: 1.25 },
                 }}
               >
                 Refresh
@@ -86,7 +95,7 @@ export const HRResumes = () => {
           />
 
           {/* Upload Section */}
-          <Box sx={{ mb: { xs: 3, sm: 4 } }}>
+          <Box sx={{ mb: { xs: 2.5, sm: 3, md: 4 } }}>
             <ResumeUpload key={uploadKey} onUploadSuccess={handleUploadSuccess} />
           </Box>
 
@@ -96,6 +105,7 @@ export const HRResumes = () => {
               borderRadius: { xs: 2, sm: 3 },
               boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
               overflow: 'hidden',
+              width: '100%',
             }}
           >
             <ResumeList
@@ -119,7 +129,7 @@ export const HRResumes = () => {
             onConfirm={handleDeleteConfirm}
           />
         </motion.div>
-      </Container>
+      </Box>
     </Layout>
   );
 };

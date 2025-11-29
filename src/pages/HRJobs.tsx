@@ -69,15 +69,19 @@ export const HRJobs = () => {
           />
 
           {/* Filter Tabs */}
-          <Box sx={{ mb: 4, borderBottom: 1, borderColor: 'divider' }}>
+          <Box sx={{ mb: { xs: 3, sm: 4 }, borderBottom: 1, borderColor: 'divider', overflowX: 'auto' }}>
             <Tabs
               value={filter}
               onChange={handleFilterChange}
+              variant="scrollable"
+              scrollButtons="auto"
               sx={{
                 '& .MuiTab-root': {
                   textTransform: 'none',
                   fontWeight: 600,
-                  minHeight: 48,
+                  minHeight: { xs: 44, sm: 48 },
+                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                  px: { xs: 1.5, sm: 2 },
                 },
               }}
             >
@@ -169,12 +173,12 @@ export const HRJobs = () => {
                 sx={{
                   display: 'grid',
                   gridTemplateColumns: {
-                    xs: 'repeat(2, 1fr)',
+                    xs: '1fr',
                     sm: 'repeat(2, 1fr)',
                     md: 'repeat(2, 1fr)',
                     lg: 'repeat(3, 1fr)',
                   },
-                  gap: { xs: 1, sm: 1.5, md: 3 },
+                  gap: { xs: 1.5, sm: 2, md: 2.5, lg: 3 },
                   width: '100%',
                 }}
               >
