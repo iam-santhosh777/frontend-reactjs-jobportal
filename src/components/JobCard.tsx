@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Card, CardContent, Typography, Button, Box, Chip } from '@mui/material';
+import { Card, CardContent, Typography, Button, Box, Chip, IconButton, useMediaQuery, useTheme } from '@mui/material';
 import { LocationOn, Business, AttachMoney, Schedule, Send, Block } from '@mui/icons-material';
 import type { Job } from '../types';
 
@@ -22,6 +22,9 @@ export const JobCard = ({
   isApplying = false,
   index = 0,
 }: JobCardProps) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   // Safely check if expired - use expiry_status from API if available
   const expiryDate = job.expiryDate ? new Date(job.expiryDate) : null;
   const isValidDate = expiryDate && !isNaN(expiryDate.getTime());
@@ -37,19 +40,23 @@ export const JobCard = ({
       exit={{ opacity: 0, y: -20 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
       layout
+      style={{ width: '100%', minWidth: 0 }}
     >
       <Card
         sx={{
           height: '100%',
+          width: '100%',
           display: 'flex',
           flexDirection: 'column',
-          borderRadius: 3,
-          boxShadow: isExpired ? '0 2px 4px rgba(0,0,0,0.08)' : '0 2px 8px rgba(0,0,0,0.1)',
-          transition: 'all 0.3s ease',
-          opacity: isExpired ? 0.85 : 1,
-          border: isExpired ? '2px solid #ffebee' : '1px solid #e0e0e0',
-          bgcolor: isExpired ? '#fafafa' : 'white',
+          borderRadius: { xs: 2.5, sm: 3 },
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)',
+          transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+          border: '1px solid',
+          borderColor: isExpired ? 'rgba(211, 47, 47, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+          bgcolor: 'white',
           position: 'relative',
+          minWidth: 0,
+          overflow: 'hidden',
           ...(isExpired && {
             '&::before': {
               content: '""',
@@ -59,148 +66,339 @@ export const JobCard = ({
               bottom: 0,
               width: '4px',
               bgcolor: 'error.main',
-              borderRadius: '3px 0 0 3px',
+              borderRadius: '2.5px 0 0 2.5px',
+              zIndex: 1,
             },
           }),
           '&:hover': {
-            boxShadow: isExpired ? '0 2px 8px rgba(0,0,0,0.12)' : '0 4px 16px rgba(0,0,0,0.15)',
-            transform: isExpired ? 'none' : 'translateY(-2px)',
-            borderColor: isExpired ? '#ffebee' : 'primary.main',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08)',
+            transform: 'translateY(-4px)',
+            borderColor: isExpired ? 'rgba(211, 47, 47, 0.25)' : 'primary.main',
           },
         }}
       >
-        <CardContent sx={{ p: { xs: 2.5, sm: 3 }, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-            <Box sx={{ flex: 1 }}>
-              <Typography
-                variant="h5"
-                component="h2"
-                sx={{
-                  fontWeight: 700,
-                  mb: 1.5,
-                  fontSize: { xs: '1.25rem', sm: '1.5rem' },
-                  color: isExpired ? 'text.secondary' : 'text.primary',
-                  lineHeight: 1.3,
-                }}
-              >
-                {job.title}
-              </Typography>
-              {isExpired && (
-                <Chip
-                  label="Expired"
+        <CardContent sx={{ 
+          p: { xs: 2, sm: 2.5 }, 
+          flexGrow: 1, 
+          display: 'flex', 
+          flexDirection: 'column',
+          position: 'relative',
+          '&:last-child': { pb: { xs: 2, sm: 2.5 } }
+        }}>
+          {/* Mark as Filled button - positioned at top right */}
+          {showExpireButton && !isExpired && (
+            <Box sx={{ position: 'absolute', top: { xs: 12, sm: 16 }, right: { xs: 12, sm: 16 }, zIndex: 2 }}>
+              {isMobile ? (
+                <IconButton
+                  onClick={() => onMarkExpired?.(job.id)}
                   color="error"
                   size="small"
-                  sx={{ 
-                    mb: 1.5,
-                    fontWeight: 600,
-                    '& .MuiChip-icon': {
-                      color: 'error.main',
+                  sx={{
+                    bgcolor: 'error.light',
+                    color: 'error.main',
+                    width: { xs: 36, sm: 40 },
+                    height: { xs: 36, sm: 40 },
+                    borderRadius: 1.5,
+                    border: '1px solid',
+                    borderColor: 'error.main',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      bgcolor: 'error.main',
+                      color: 'white',
+                      transform: 'scale(1.05)',
+                      boxShadow: '0 4px 12px rgba(211, 47, 47, 0.3)',
                     },
                   }}
-                  icon={<Block />}
-                />
-              )}
-            </Box>
-          </Box>
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2, flexGrow: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-              <Business sx={{ fontSize: 18, color: 'text.secondary' }} />
-              <Typography variant="body2" color="text.secondary">
-                {job.company || 'Company not specified'}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-              <LocationOn sx={{ fontSize: 18, color: 'text.secondary' }} />
-              <Typography variant="body2" color="text.secondary">
-                {job.location || 'Location not specified'}
-              </Typography>
-            </Box>
-            {job.salary && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                <AttachMoney sx={{ fontSize: 18, color: 'text.secondary' }} />
-                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-                  {job.salary}
-                </Typography>
-              </Box>
-            )}
-            {isValidDate && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                <Schedule sx={{ fontSize: 18, color: 'text.secondary' }} />
-                <Typography variant="body2" color="text.secondary">
-                  Expires: {expiryDate!.toLocaleDateString()}
-                </Typography>
-              </Box>
-            )}
-          </Box>
-
-          {job.description && (
-            <Typography
-              variant="body2"
-              sx={{
-                mt: 1,
-                mb: 2,
-                color: 'text.secondary',
-                lineHeight: 1.6,
-                display: '-webkit-box',
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                flexGrow: 1,
-              }}
-            >
-              {job.description}
-            </Typography>
-          )}
-
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: 2,
-              mt: 'auto',
-              pt: 2,
-              borderTop: '1px solid',
-              borderColor: 'divider',
-            }}
-          >
-            <Box sx={{ flex: 1, minWidth: 200 }}>
-              {showExpireButton && !isExpired && (
+                  aria-label="Mark as Filled"
+                >
+                  <Block sx={{ fontSize: { xs: '1rem', sm: '1.125rem' } }} />
+                </IconButton>
+              ) : (
                 <Button
-                  size="medium"
+                  size="small"
                   variant="outlined"
                   color="error"
                   onClick={() => onMarkExpired?.(job.id)}
                   startIcon={<Block />}
                   sx={{
-                    borderRadius: 2,
+                    borderRadius: 1.5,
                     textTransform: 'none',
                     fontWeight: 600,
+                    px: 2,
+                    py: 0.75,
+                    fontSize: { xs: '0.75rem', sm: '0.8125rem' },
+                    borderWidth: 1.5,
+                    minWidth: 'auto',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      borderWidth: 1.5,
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 4px 12px rgba(211, 47, 47, 0.2)',
+                    },
                   }}
                 >
                   Mark as Filled
                 </Button>
               )}
             </Box>
-            {showApplyButton && !isExpired && (
-              <Button
-                size="medium"
-                variant="contained"
-                onClick={() => onApply?.(job.id)}
-                disabled={isApplying}
-                startIcon={<Send />}
+          )}
+
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: { xs: 1.25, sm: 1.5 }, gap: 1.5, pr: { xs: showExpireButton && !isExpired ? 9 : 0, sm: showExpireButton && !isExpired ? 12 : 0 } }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography
+                variant="h5"
+                component="h2"
                 sx={{
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 3,
+                  fontWeight: 700,
+                  mb: { xs: 0.75, sm: 1 },
+                  fontSize: { xs: '1.125rem', sm: '1.375rem', md: '1.5rem' },
+                  color: 'text.primary',
+                  lineHeight: 1.2,
+                  letterSpacing: '-0.01em',
+                  wordBreak: 'break-word',
                 }}
               >
-                {isApplying ? 'Applying...' : 'Apply Now'}
-              </Button>
+                {job.title}
+              </Typography>
+              {/* Reserve space for chip to maintain consistent height */}
+              <Box sx={{ height: { xs: 28, sm: 32 }, display: 'flex', alignItems: 'center' }}>
+                {isExpired && (
+                  <Chip
+                    label="Expired"
+                    color="error"
+                    size="small"
+                    sx={{ 
+                      mb: 0,
+                      fontWeight: 600,
+                      fontSize: { xs: '0.6875rem', sm: '0.75rem' },
+                      height: { xs: 24, sm: 26 },
+                      '& .MuiChip-label': {
+                        px: { xs: 1, sm: 1.5 },
+                      },
+                      '& .MuiChip-icon': {
+                        color: 'error.main',
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      },
+                      bgcolor: 'error.light',
+                      border: '1px solid',
+                      borderColor: 'error.main',
+                    }}
+                    icon={<Block sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }} />}
+                  />
+                )}
+              </Box>
+            </Box>
+          </Box>
+
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: { xs: 1, sm: 1.25 }, 
+            mb: { xs: 1.25, sm: 1.5 }
+          }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'flex-start', 
+              gap: { xs: 0.75, sm: 1 }, 
+              flexWrap: 'nowrap',
+            }}>
+              <Business sx={{ 
+                fontSize: { xs: 18, sm: 20, md: 22 }, 
+                color: 'primary.main',
+                flexShrink: 0,
+                mt: 0.25,
+              }} />
+              <Typography 
+                variant="body2" 
+                color="text.primary"
+                sx={{ 
+                  fontWeight: 500,
+                  fontSize: { xs: '0.8125rem', sm: '0.875rem', md: '0.9375rem' },
+                  flex: 1,
+                  minWidth: 0,
+                  wordBreak: 'break-word',
+                }}
+              >
+                {job.company || 'Company not specified'}
+              </Typography>
+            </Box>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'flex-start', 
+              gap: { xs: 0.75, sm: 1 }, 
+              flexWrap: 'nowrap',
+            }}>
+              <LocationOn sx={{ 
+                fontSize: { xs: 18, sm: 20, md: 22 }, 
+                color: 'primary.main',
+                flexShrink: 0,
+                mt: 0.25,
+              }} />
+              <Typography 
+                variant="body2" 
+                color="text.primary"
+                sx={{ 
+                  fontWeight: 500,
+                  fontSize: { xs: '0.8125rem', sm: '0.875rem', md: '0.9375rem' },
+                  flex: 1,
+                  minWidth: 0,
+                  wordBreak: 'break-word',
+                }}
+              >
+                {job.location || 'Location not specified'}
+              </Typography>
+            </Box>
+            {job.salary && (
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'flex-start', 
+                gap: { xs: 0.75, sm: 1 }, 
+                flexWrap: 'nowrap',
+              }}>
+                <AttachMoney sx={{ 
+                  fontSize: { xs: 18, sm: 20, md: 22 }, 
+                  color: 'primary.main',
+                  flexShrink: 0,
+                  mt: 0.25,
+                }} />
+                <Typography 
+                  variant="body2" 
+                  color="text.primary"
+                  sx={{ 
+                    fontWeight: 600,
+                    fontSize: { xs: '0.8125rem', sm: '0.875rem', md: '0.9375rem' },
+                    color: 'success.main',
+                    flex: 1,
+                    minWidth: 0,
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {job.salary}
+                </Typography>
+              </Box>
             )}
+            {isValidDate && (
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'flex-start', 
+                gap: { xs: 0.75, sm: 1 }, 
+                flexWrap: 'nowrap',
+              }}>
+                <Schedule sx={{ 
+                  fontSize: { xs: 18, sm: 20, md: 22 }, 
+                  color: isExpired ? 'error.main' : 'primary.main',
+                  flexShrink: 0,
+                  mt: 0.25,
+                }} />
+                <Typography 
+                  variant="body2" 
+                  color={isExpired ? 'error.main' : 'text.primary'}
+                  sx={{ 
+                    fontWeight: 500,
+                    fontSize: { xs: '0.8125rem', sm: '0.875rem', md: '0.9375rem' },
+                    flex: 1,
+                    minWidth: 0,
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  Expires: {expiryDate!.toLocaleDateString()}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+
+          <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', mb: { xs: 1.25, sm: 1.5 } }}>
+            {job.description && (
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'text.secondary',
+                  lineHeight: 1.6,
+                  display: '-webkit-box',
+                  WebkitLineClamp: { xs: 2, sm: 3 },
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  fontSize: { xs: '0.8125rem', sm: '0.875rem', md: '0.9375rem' },
+                }}
+              >
+                {job.description}
+              </Typography>
+            )}
+          </Box>
+
+          {/* Button area - always rendered to maintain consistent height */}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              flexDirection: 'row',
+              gap: { xs: 1, sm: 1.5 },
+              mt: 'auto',
+              pt: { xs: 1.25, sm: 1.5 },
+              minHeight: { xs: 48, sm: 56 },
+              borderTop: '1px solid',
+              borderColor: 'rgba(0, 0, 0, 0.08)',
+            }}
+          >
+            {showApplyButton && !isExpired ? (
+              <>
+                {isMobile ? (
+                  <IconButton
+                    onClick={() => onApply?.(job.id)}
+                    disabled={isApplying}
+                    color="primary"
+                    sx={{
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      width: { xs: 44, sm: 48 },
+                      height: { xs: 44, sm: 48 },
+                      borderRadius: 1.5,
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        bgcolor: 'primary.dark',
+                        transform: 'scale(1.05)',
+                        boxShadow: '0 4px 16px rgba(25, 118, 210, 0.4)',
+                      },
+                      '&:disabled': {
+                        bgcolor: 'action.disabledBackground',
+                        color: 'action.disabled',
+                      },
+                    }}
+                    aria-label={isApplying ? 'Applying...' : 'Apply Now'}
+                  >
+                    <Send sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }} />
+                  </IconButton>
+                ) : (
+                  <Button
+                    size="medium"
+                    variant="contained"
+                    onClick={() => onApply?.(job.id)}
+                    disabled={isApplying}
+                    startIcon={<Send />}
+                    sx={{
+                      borderRadius: 1.5,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      px: { xs: 2.5, sm: 3 },
+                      py: { xs: 1, sm: 1.25 },
+                      fontSize: { xs: '0.8125rem', sm: '0.875rem' },
+                      boxShadow: '0 2px 8px rgba(25, 118, 210, 0.3)',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        boxShadow: '0 4px 16px rgba(25, 118, 210, 0.4)',
+                        transform: 'translateY(-1px)',
+                      },
+                      '&:disabled': {
+                        boxShadow: 'none',
+                      },
+                    }}
+                  >
+                    {isApplying ? 'Applying...' : 'Apply Now'}
+                  </Button>
+                )}
+              </>
+            ) : null}
           </Box>
         </CardContent>
       </Card>

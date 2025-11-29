@@ -33,12 +33,12 @@ export const DashboardWidget = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1, duration: 0.4 }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      style={{ height: '100%', width: '100%', display: 'flex' }}
+      style={{ height: '100%', width: '100%', display: 'flex', minWidth: 0 }}
     >
       <Paper
         elevation={2}
         sx={{
-          p: 3,
+          p: { xs: 2, sm: 2.5, md: 3 },
           height: '100%',
           width: '100%',
           display: 'flex',
@@ -64,19 +64,19 @@ export const DashboardWidget = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            mb: 3,
+            mb: { xs: 2, sm: 2.5, md: 3 },
           }}
         >
           <Box
             sx={{
-              p: 2,
+              p: { xs: 1.5, sm: 1.75, md: 2 },
               borderRadius: 2,
               bgcolor: colors.light,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: 64,
-              height: 64,
+              width: { xs: 48, sm: 56, md: 64 },
+              height: { xs: 48, sm: 56, md: 64 },
             }}
           >
             {icon}
@@ -95,9 +95,9 @@ export const DashboardWidget = ({
               component="div"
               sx={{
                 fontWeight: 700,
-                mb: 1.5,
+                mb: { xs: 1, sm: 1.5 },
                 color: colors.bg,
-                fontSize: { xs: '2.5rem', sm: '3rem', md: '3.5rem' },
+                fontSize: { xs: '2rem', sm: '2.5rem', md: '3.5rem' },
                 lineHeight: 1.2,
                 display: 'flex',
                 alignItems: 'center',
@@ -111,8 +111,9 @@ export const DashboardWidget = ({
             sx={{
               color: 'text.secondary',
               fontWeight: 500,
-              fontSize: '0.875rem',
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
               letterSpacing: '0.02em',
+              lineHeight: 1.4,
             }}
           >
             {title}

@@ -1,77 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { JobCard } from '../components/JobCard';
 import { JobForm } from '../components/JobForm';
-import { jobsAPI } from '../services/api';
-import { toast } from 'react-hot-toast';
+import { useJobs } from '../hooks/useJobs';
+import { useJobFilters } from '../hooks/useJobFilters';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Container, Typography, Box, Button, Dialog, DialogTitle, DialogContent, Tabs, Tab, Chip } from '@mui/material';
+import { Container, Box, Button, Dialog, DialogTitle, DialogContent, Tabs, Tab, Chip, Typography } from '@mui/material';
 import { Add, Work, Block, CheckCircle } from '@mui/icons-material';
-import type { Job } from '../types';
-
-type FilterType = 'all' | 'active' | 'expired';
+import { PageHeader } from '../components/shared/PageHeader';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner';
+import { EmptyState } from '../components/shared/EmptyState';
 
 export const HRJobs = () => {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { jobs, loading, loadJobs, markAsExpired } = useJobs({ autoLoad: true });
+  const { filter, setFilter, filteredJobs, activeCount, expiredCount } = useJobFilters(jobs);
   const [jobFormOpen, setJobFormOpen] = useState(false);
-  const [filter, setFilter] = useState<FilterType>('all');
-
-  useEffect(() => {
-    loadJobs();
-
-    // Listen for job expiration events
-    const handleJobExpired = () => {
-      loadJobs();
-    };
-
-    window.addEventListener('job-expired', handleJobExpired);
-    return () => window.removeEventListener('job-expired', handleJobExpired);
-  }, []);
-
-  const loadJobs = async () => {
-    try {
-      setLoading(true);
-      const jobsData = await jobsAPI.getAllJobs();
-      setJobs(jobsData);
-      applyFilter(jobsData, filter);
-    } catch (error: any) {
-      toast.error('Failed to load jobs');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const applyFilter = (jobsList: Job[], filterType: FilterType) => {
-    let filtered: Job[] = [];
-    
-    switch (filterType) {
-      case 'active':
-        filtered = jobsList.filter((job) => {
-          // Use expiry_status from API if available, otherwise fall back to isExpired
-          const isExpired = job.expiry_status === 'expired' || job.isExpired;
-          return !isExpired;
-        });
-        break;
-      case 'expired':
-        filtered = jobsList.filter((job) => {
-          // Use expiry_status from API if available, otherwise fall back to isExpired
-          const isExpired = job.expiry_status === 'expired' || job.isExpired;
-          return isExpired;
-        });
-        break;
-      default:
-        filtered = jobsList;
-    }
-    
-    setFilteredJobs(filtered);
-  };
-
-  useEffect(() => {
-    applyFilter(jobs, filter);
-  }, [filter, jobs]);
 
   const handleCreateJob = async () => {
     setJobFormOpen(false);
@@ -80,71 +23,50 @@ export const HRJobs = () => {
 
   const handleMarkExpired = async (jobId: string) => {
     try {
-      await jobsAPI.markAsExpired(jobId);
-      toast.success('Job marked as expired');
-      
-      // Update the job immediately in the state
-      setJobs((prevJobs) =>
-        prevJobs.map((job) =>
-          job.id === jobId ? { ...job, isExpired: true, expiry_status: 'expired' as const } : job
-        )
-      );
-      
-      // Reload to get updated data from server
-      await loadJobs();
-    } catch (error: any) {
-      toast.error('Failed to mark job as expired');
+      await markAsExpired(jobId);
+    } catch (error) {
+      // Error is already handled in the hook
     }
   };
 
-  const handleFilterChange = (_event: React.SyntheticEvent, newValue: FilterType) => {
+  const handleFilterChange = (_event: React.SyntheticEvent, newValue: typeof filter) => {
     setFilter(newValue);
   };
 
   return (
     <Layout>
-      <Container maxWidth="xl">
+      <Box
+        sx={{
+          width: '100%',
+          px: { xs: 1, sm: 2, md: 3 },
+          mx: 'auto',
+          maxWidth: { xs: '100%', sm: '100%', md: '1536px' },
+        }}
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 3,
-              flexWrap: 'wrap',
-              gap: 2,
-            }}
-          >
-            <Box>
-              <Typography
-                variant="h4"
-                component="h1"
-                sx={{ fontWeight: 700, mb: 1, fontSize: { xs: '1.75rem', sm: '2.125rem' } }}
+          <PageHeader
+            title="Job Management"
+            description="Manage all your job postings"
+            action={
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={() => setJobFormOpen(true)}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 3,
+                }}
               >
-                Job Management
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Manage all your job postings
-              </Typography>
-            </Box>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => setJobFormOpen(true)}
-              sx={{
-                borderRadius: 2,
-                textTransform: 'none',
-                fontWeight: 600,
-                px: 3,
-              }}
-            >
-              Post New Job
-            </Button>
-          </Box>
+                Post New Job
+              </Button>
+            }
+          />
 
           {/* Filter Tabs */}
           <Box sx={{ mb: 4, borderBottom: 1, borderColor: 'divider' }}>
@@ -178,10 +100,7 @@ export const HRJobs = () => {
                     <CheckCircle sx={{ fontSize: 18 }} />
                     <span>Active</span>
                     <Chip
-                      label={jobs.filter((job) => {
-                        const isExpired = job.expiry_status === 'expired' || job.isExpired;
-                        return !isExpired;
-                      }).length}
+                      label={activeCount}
                       size="small"
                       color="success"
                       sx={{ height: 20, fontSize: '0.75rem' }}
@@ -196,10 +115,7 @@ export const HRJobs = () => {
                     <Block sx={{ fontSize: 18 }} />
                     <span>Expired</span>
                     <Chip
-                      label={jobs.filter((job) => {
-                        const isExpired = job.expiry_status === 'expired' || job.isExpired;
-                        return isExpired;
-                      }).length}
+                      label={expiredCount}
                       size="small"
                       color="error"
                       sx={{ height: 20, fontSize: '0.75rem' }}
@@ -212,96 +128,65 @@ export const HRJobs = () => {
           </Box>
 
           {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              >
-                <Work sx={{ fontSize: 48, color: 'primary.main' }} />
-              </motion.div>
-            </Box>
+            <LoadingSpinner />
           ) : filteredJobs.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Box
-                sx={{
-                  textAlign: 'center',
-                  py: 8,
-                  bgcolor: 'white',
-                  borderRadius: 3,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                }}
-              >
-                {filter === 'expired' ? (
-                  <>
-                    <Block sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-                    <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 500 }}>
-                      No expired jobs
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      All jobs are currently active
-                    </Typography>
-                  </>
-                ) : filter === 'active' ? (
-                  <>
-                    <CheckCircle sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
-                    <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 500 }}>
-                      No active jobs
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      All jobs have expired or no jobs posted yet
-                    </Typography>
-                  </>
-                ) : (
-                  <>
-                    <Work sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-                    <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 500 }}>
-                      No jobs posted yet
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 3 }}>
-                      Create your first job posting to get started
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      startIcon={<Add />}
-                      onClick={() => setJobFormOpen(true)}
-                      sx={{
-                        borderRadius: 2,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Post New Job
-                    </Button>
-                  </>
-                )}
-              </Box>
-            </motion.div>
+            filter === 'expired' ? (
+              <EmptyState
+                icon={<Block sx={{ fontSize: 64, color: 'text.secondary' }} />}
+                title="No expired jobs"
+                description="All jobs are currently active"
+              />
+            ) : filter === 'active' ? (
+              <EmptyState
+                icon={<CheckCircle sx={{ fontSize: 64, color: 'success.main' }} />}
+                title="No active jobs"
+                description="All jobs have expired or no jobs posted yet"
+              />
+            ) : (
+              <EmptyState
+                icon={<Work sx={{ fontSize: 64, color: 'text.secondary' }} />}
+                title="No jobs posted yet"
+                description="Create your first job posting to get started"
+                action={
+                  <Button
+                    variant="contained"
+                    startIcon={<Add />}
+                    onClick={() => setJobFormOpen(true)}
+                    sx={{
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Post New Job
+                  </Button>
+                }
+              />
+            )
           ) : (
             <AnimatePresence mode="wait">
               <Box
                 sx={{
                   display: 'grid',
                   gridTemplateColumns: {
-                    xs: '1fr',
+                    xs: 'repeat(2, 1fr)',
                     sm: 'repeat(2, 1fr)',
                     md: 'repeat(2, 1fr)',
                     lg: 'repeat(3, 1fr)',
                   },
-                  gap: 3,
+                  gap: { xs: 1, sm: 1.5, md: 3 },
+                  width: '100%',
                 }}
               >
                 {filteredJobs.map((job, index) => (
-                  <JobCard
-                    key={job.id}
-                    job={job}
-                    onMarkExpired={handleMarkExpired}
-                    showExpireButton={!job.isExpired}
-                    index={index}
-                  />
+                  <Box key={job.id} sx={{ minWidth: 0, width: '100%' }}>
+                    <JobCard
+                      job={job}
+                      onMarkExpired={handleMarkExpired}
+                      showExpireButton={!job.isExpired}
+                      index={index}
+                    />
+                  </Box>
                 ))}
               </Box>
             </AnimatePresence>
@@ -341,7 +226,7 @@ export const HRJobs = () => {
             </DialogContent>
           </Dialog>
         </motion.div>
-      </Container>
+      </Box>
     </Layout>
   );
 };

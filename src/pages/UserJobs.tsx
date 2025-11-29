@@ -1,173 +1,107 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { JobCard } from '../components/JobCard';
-import { jobsAPI } from '../services/api';
-import { toast } from 'react-hot-toast';
+import { useJobs } from '../hooks/useJobs';
 import { motion } from 'framer-motion';
-import { Container, Typography, Box, CircularProgress, Button } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { Refresh, Work } from '@mui/icons-material';
-import type { Job } from '../types';
+import { PageHeader } from '../components/shared/PageHeader';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner';
+import { EmptyState } from '../components/shared/EmptyState';
 
 export const UserJobs = () => {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { jobs, loading, loadActiveJobs, applyToJob } = useJobs({ autoLoad: true, filterExpired: true });
   const [applyingJobId, setApplyingJobId] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadJobs();
-
-    // Listen for job expiration events via WebSocket
-    const handleJobExpired = (event: CustomEvent) => {
-      const { jobId } = event.detail;
-      setJobs((prevJobs) => prevJobs.filter((job) => job.id !== jobId));
-    };
-
-    window.addEventListener('job-expired', handleJobExpired as EventListener);
-    return () => window.removeEventListener('job-expired', handleJobExpired as EventListener);
-  }, []);
-
-  const loadJobs = async () => {
-    try {
-      setLoading(true);
-      const activeJobs = await jobsAPI.getActiveJobs();
-
-      // Filter out expired jobs using expiry_status from API
-      const validJobs = activeJobs.filter((job) => {
-        if (!job.id || !job.title) {
-          return false;
-        }
-
-        // Use expiry_status from API if available, otherwise fall back to isExpired
-        const isExpired = job.expiry_status === 'expired' || job.isExpired;
-        return !isExpired;
-      });
-
-      setJobs(validJobs);
-    } catch (error: any) {
-      toast.error('Failed to load jobs');
-      console.error('Error loading jobs:', error);
-      setJobs([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleApply = async (jobId: string) => {
     try {
       setApplyingJobId(jobId);
-      await jobsAPI.applyToJob(jobId);
-      toast.success('Application submitted successfully!');
-      await loadJobs();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to apply for job');
+      await applyToJob(jobId);
+      await loadActiveJobs();
+    } catch (error) {
+      // Error is already handled in the hook
     } finally {
       setApplyingJobId(null);
     }
   };
 
-  if (loading) {
-    return (
-      <Layout>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '50vh',
-          }}
-        >
-          <CircularProgress size={60} />
-        </Box>
-      </Layout>
-    );
-  }
-
   return (
     <Layout>
-      <Container maxWidth="lg">
+      <Box
+        sx={{ 
+          width: '100%', 
+          boxSizing: 'border-box',
+          px: { xs: 1, sm: 2, md: 3 },
+          mx: 'auto',
+          maxWidth: { xs: '100%', sm: '600px', md: '1200px' },
+        }}
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
+          style={{ width: '100%' }}
         >
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 4,
-              flexWrap: 'wrap',
-              gap: 2,
-            }}
-          >
-            <Box>
-              <Typography
-                variant="h4"
-                component="h1"
-                sx={{ fontWeight: 700, mb: 1, fontSize: { xs: '1.75rem', sm: '2.125rem' } }}
-              >
-                Available Jobs
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Browse and apply to available job positions
-              </Typography>
-            </Box>
-            <Button
-              variant="outlined"
-              startIcon={<Refresh />}
-              onClick={loadJobs}
-              disabled={loading}
-              sx={{
-                borderRadius: 2,
-                textTransform: 'none',
-                fontWeight: 600,
-              }}
-            >
-              {loading ? 'Loading...' : 'Refresh'}
-            </Button>
-          </Box>
-
-          {jobs.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Box
+          <PageHeader
+            title="Available Jobs"
+            description="Browse and apply to available job positions"
+            action={
+              <Button
+                variant="outlined"
+                startIcon={<Refresh />}
+                onClick={loadActiveJobs}
+                disabled={loading}
+                size="medium"
                 sx={{
-                  textAlign: 'center',
-                  py: 8,
-                  bgcolor: 'white',
-                  borderRadius: 3,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: { xs: '0.875rem', sm: '1rem' },
                 }}
               >
-                <Work sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 500 }}>
-                  No active jobs available at the moment
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Check back later for new opportunities
-                </Typography>
-              </Box>
-            </motion.div>
+                {loading ? 'Loading...' : 'Refresh'}
+              </Button>
+            }
+          />
+
+          {loading ? (
+            <LoadingSpinner fullHeight />
+          ) : jobs.length === 0 ? (
+            <EmptyState
+              icon={<Work sx={{ fontSize: { xs: 48, sm: 64 }, color: 'text.secondary' }} />}
+              title="No active jobs available at the moment"
+              description="Check back later for new opportunities"
+            />
           ) : (
-            <Box>
+            <Box 
+              sx={{ 
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: 'repeat(2, 1fr)',
+                  sm: 'repeat(2, 1fr)',
+                  md: '1fr',
+                  lg: '1fr',
+                },
+                gap: { xs: 1, sm: 1.5, md: 3 },
+                width: '100%',
+                boxSizing: 'border-box',
+              }}
+            >
               {jobs.map((job, index) => (
-                <JobCard
-                  key={job.id}
-                  job={job}
-                  onApply={handleApply}
-                  showApplyButton={true}
-                  isApplying={applyingJobId === job.id}
-                  index={index}
-                />
+                <Box key={job.id} sx={{ minWidth: 0, width: '100%' }}>
+                  <JobCard
+                    job={job}
+                    onApply={handleApply}
+                    showApplyButton={true}
+                    isApplying={applyingJobId === job.id}
+                    index={index}
+                  />
+                </Box>
               ))}
             </Box>
           )}
         </motion.div>
-      </Container>
+      </Box>
     </Layout>
   );
 };
-

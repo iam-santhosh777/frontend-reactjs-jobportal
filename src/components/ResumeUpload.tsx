@@ -20,6 +20,7 @@ import {
 } from '@mui/icons-material';
 import { resumeAPI } from '../services/api';
 import { toast } from 'react-hot-toast';
+import { formatFileSize } from '../utils/fileUtils';
 import type { Resume } from '../types';
 
 interface FileUploadState {
@@ -108,11 +109,7 @@ export const ResumeUpload = ({ onUploadSuccess }: ResumeUploadProps) => {
     e.target.value = ''; // Reset input
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-  };
+  // formatFileSize is imported from utils
 
   return (
     <Paper

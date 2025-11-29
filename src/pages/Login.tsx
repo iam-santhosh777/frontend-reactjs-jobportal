@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Button,
@@ -9,14 +10,29 @@ import {
   Typography,
   Box,
   InputAdornment,
+  IconButton,
 } from '@mui/material';
-import { Email, Lock, Login as LoginIcon } from '@mui/icons-material';
+import { Email, Lock, Login as LoginIcon, Visibility, VisibilityOff } from '@mui/icons-material';
+import nextHireLogo from '../assets/nextHire.png';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const { login, isAuthenticated, user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user) {
+      if (user.role === 'hr') {
+        navigate('/hr/dashboard', { replace: true });
+      } else {
+        navigate('/user/dashboard', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +45,11 @@ export const Login = () => {
       setLoading(false);
     }
   };
+
+  // Don't render login form if already authenticated (while redirecting)
+  if (authLoading || (isAuthenticated && user)) {
+    return null;
+  }
 
   return (
     <Box
@@ -62,20 +83,18 @@ export const Login = () => {
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
               >
-                <Typography
-                  variant="h3"
-                  component="h1"
+                <Box
+                  component="img"
+                  src={nextHireLogo}
+                  alt="nextHire"
                   sx={{
-                    fontWeight: 700,
-                    mb: 1,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
+                    height: { xs: 60, sm: 80, md: 100 },
+                    width: 'auto',
+                    objectFit: 'contain',
+                    mb: 2,
+                    mx: 'auto',
                   }}
-                >
-                  HRMS + Job Portal
-                </Typography>
+                />
               </motion.div>
               <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
                 Sign in to continue
@@ -120,7 +139,7 @@ export const Login = () => {
                 <TextField
                   fullWidth
                   label="Password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -130,6 +149,18 @@ export const Login = () => {
                     startAdornment: (
                       <InputAdornment position="start">
                         <Lock color="action" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                          sx={{ color: 'action.active' }}
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
                       </InputAdornment>
                     ),
                   }}

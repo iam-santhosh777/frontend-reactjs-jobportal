@@ -1,7 +1,8 @@
 import { Layout } from '../components/Layout';
 import { JobApplicationList } from '../components/JobApplicationList';
+import { PageHeader } from '../components/shared/PageHeader';
 import { motion } from 'framer-motion';
-import { Container, Typography, Box } from '@mui/material';
+import { Container } from '@mui/material';
 
 export const HRApplications = () => {
   return (
@@ -12,18 +13,10 @@ export const HRApplications = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <Box sx={{ mb: 4 }}>
-            <Typography
-              variant="h4"
-              component="h1"
-              sx={{ fontWeight: 700, mb: 1, fontSize: { xs: '1.75rem', sm: '2.125rem' } }}
-            >
-              Job Applications
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              View and manage all job applications
-            </Typography>
-          </Box>
+          <PageHeader
+            title="Job Applications"
+            description="View and manage all job applications"
+          />
 
           <JobApplicationList />
         </motion.div>
@@ -31,6 +24,7 @@ export const HRApplications = () => {
     </Layout>
   );
 };
+
 
 
 
