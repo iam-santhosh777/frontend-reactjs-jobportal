@@ -31,7 +31,6 @@ import {
   Assignment,
   Description,
   Logout,
-  Close,
   Menu as MenuIcon,
   Settings,
   Notifications,

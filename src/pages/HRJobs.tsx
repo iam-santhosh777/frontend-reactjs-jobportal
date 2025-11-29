@@ -5,7 +5,7 @@ import { JobForm } from '../components/JobForm';
 import { useJobs } from '../hooks/useJobs';
 import { useJobFilters } from '../hooks/useJobFilters';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Container, Box, Button, Dialog, DialogTitle, DialogContent, Tabs, Tab, Chip, Typography } from '@mui/material';
+import { Box, Button, Dialog, DialogTitle, DialogContent, Tabs, Tab, Chip, Typography } from '@mui/material';
 import { Add, Work, Block, CheckCircle } from '@mui/icons-material';
 import { PageHeader } from '../components/shared/PageHeader';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
